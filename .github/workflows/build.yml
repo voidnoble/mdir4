@@ -1,5 +1,9 @@
 name: Build Mdir4
 
+# tauri-action needs this to create releases and upload assets on tag builds.
+permissions:
+  contents: write
+
 on:
   push:
     branches: [main]
