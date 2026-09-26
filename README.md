@@ -12,16 +12,66 @@ WinM 4.5의 UX 패러다임(MDir 계승)을 현대 크로스플랫폼 데스크�
 - **Tauri 2** + **Rust** (파일 I/O, 아카이브, 검색 — 네이티브 속도)
 - **React** + **TypeScript** + **Vite** (UI)
 
-## 개발
+## 소스에서 개발 · 빌드
+
+### 1. 사전 준비
+
+- Node.js 20+
+- Rust stable ([rustup](https://rustup.rs)으로 설치)
+- OS별 추가 패키지
+  - Linux (Ubuntu/Debian): `sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`
+  - macOS: Xcode Command Line Tools (`xcode-select --install`)
+  - Windows: WebView2 (보통 기본 설치됨) + MSVC 빌드 도구
+
+### 2. 소스 받기
+
+git clone:
+
+```sh
+git clone https://github.com/voidnoble/mdir4.git
+cd mdir4
+```
+
+또는 [릴리스 페이지](https://github.com/voidnoble/mdir4/releases)의 소스 tar.gz를 받아 압축 해제:
+
+```sh
+tar xzf mdir4-1.0.0.tar.gz
+cd mdir4-1.0.0
+```
+
+### 3. 의존성 설치
 
 ```sh
 npm install
-npm run tauri dev      # 개발 실행
-npm run tauri build    # OS별 번들 빌드
 ```
 
-Rust만 검증: `cd src-tauri && cargo check`
-프론트엔드만 검증: `npm run build`
+### 4. 개발 실행 (핫 리로드)
+
+```sh
+npm run tauri dev
+```
+
+### 5. 로컬 빌드 (OS별 설치 파일 생성)
+
+```sh
+npm run tauri build
+```
+
+산출물 위치: `src-tauri/target/release/bundle/`
+
+| OS | 산출물 |
+|---|---|
+| macOS | `dmg/*.dmg`, `macos/*.app` |
+| Windows | `nsis/*-setup.exe`, `msi/*.msi` |
+| Linux | `deb/*.deb`, `rpm/*.rpm`, `appimage/*.AppImage` |
+
+### 부분 검증
+
+```sh
+npm run build              # TypeScript 컴파일 + Vite 빌드
+cd src-tauri && cargo test # Rust 통합 테스트
+cd src-tauri && cargo check # Rust 컴파일 검증
+```
 
 ## 다운로드
 
