@@ -98,3 +98,8 @@ docs/reference/     WinM 원본 레퍼런스
 
 P0 스캐폴딩 → P1 Rust fs 코어 → P2 듀얼 패널 UI → P3 키바/단축키/다이얼로그 →
 P4 MVP 릴리스 → P5 MCD/QCD/분할/고급이름바꾸기 → P6 v1 릴리스
+
+## 라이센스
+
+Mdir4는 [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) 라이센스로 배포됩니다.
+상업적 이용이 가능하며, 수정한 버전을 배포할 때는 소스 코드를 함께 공개해야 합니다.
