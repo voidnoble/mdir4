@@ -64,3 +64,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: ${{ matrix.args }}
+          # tauri-action@v0 does not auto-detect the tag from the event:
+          # pass it explicitly so release assets are uploaded on tag pushes.
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: ${{ github.ref_type == 'tag' && format('Mdir4 {0}', github.ref_name) || '' }}
+          releaseDraft: true
