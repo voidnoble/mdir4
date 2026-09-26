@@ -23,6 +23,14 @@ npm run tauri build    # OS별 번들 빌드
 Rust만 검증: `cd src-tauri && cargo check`
 프론트엔드만 검증: `npm run build`
 
+## 다운로드
+
+최신 릴리스: [GitHub Releases](https://github.com/voidnoble/mdir4/releases)
+
+> [!NOTE]
+> macOS 빌드는 미서명 상태입니다. 처음 실행 시 Gatekeeper 경고가 나올 수 있으며,
+> `시스템 설정 → 개인정보 보호 및 보안`에서 허용하면 실행됩니다.
+
 ## 구조
 
 ```
