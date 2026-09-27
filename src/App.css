@@ -125,9 +125,17 @@ body,
 .panes {
   flex: 1;
   display: flex;
-  gap: 4px;
-  padding: 4px;
+  gap: 0;
+  padding: 0;
   min-height: 0;
+}
+
+/* 보기 > 창: split divider (WinM reference: light-gray splitter bar, no black frame) */
+.panes.layout-vertical .pane + .pane {
+  border-left: 4px solid #d4d4d4;
+}
+.panes.layout-horizontal .pane + .pane {
+  border-top: 4px solid #d4d4d4;
 }
 
 /* 보기 > 창: 수평 분할 — panels stacked top/bottom */
