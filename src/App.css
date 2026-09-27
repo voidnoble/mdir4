@@ -22,7 +22,6 @@
   --cursor-fg-dim: #ffc9c9;
   --cursor-dim-bg: #7a0000;
   --cursor-dim-fg: #ffffff;
-  --row-hover: #1a1a1a;
   --sel-name: #ffff00;
   --sel-name-cursor: #ffff00;
   --dir-fg: #ff0000;
@@ -74,7 +73,6 @@
   --cursor-fg-dim: #1a4a6a;
   --cursor-dim-bg: #e8b4b4;
   --cursor-dim-fg: #1e1e1e;
-  --row-hover: #e8e8e8;
   --sel-name: #8a6d00;
   --sel-name-cursor: #7a5f00;
   --dir-fg: #b30000;
@@ -530,8 +528,11 @@ body,
   white-space: nowrap;
 }
 
+/* No hover bar on rows: only the current selection (cursor) bar is shown
+   (WinM reference). A hover background would stick under a stationary mouse
+   while keyboard-scrolling and look like a second, ghost selection bar. */
 .frow:hover {
-  background: var(--row-hover);
+  background: transparent;
 }
 
 .frow.cursor {
