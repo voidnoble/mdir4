@@ -40,6 +40,7 @@ import OpenWithDialog, { extOf } from "./dialogs/OpenWithDialog";
 import PropsDialog from "./dialogs/PropsDialog";
 import SelectDialog from "./dialogs/SelectDialog";
 import { usePanel } from "./hooks/usePanel";
+import { isDotDot } from "./hooks/usePanel";
 import { getLang, setLang, useT } from "./i18n";
 import MenuBar from "./components/MenuBar";
 import { buildWinMMenu, PROG_FILTER, ZIP_FILTER, type WinMItem, type WinMActions } from "./menus/winm";
@@ -380,7 +381,7 @@ function App() {
     const { left, right, active } = panelsRef.current;
     const p = active === 0 ? left : right;
     const e = p.state.entries[p.state.cursor];
-    if (!e) return;
+    if (!e || isDotDot(e)) return;
     setDialog({ kind: "rename", path: e.path, name: e.name });
   }, []);
 
@@ -654,7 +655,7 @@ function App() {
 
   const openProps = useCallback(() => {
     const ce = cursorEntry();
-    if (!ce) return;
+    if (!ce || isDotDot(ce)) return;
     const { left, right, active } = panelsRef.current;
     const p = active === 0 ? left : right;
     setDialog({ kind: "props", path: ce.path, dir: p.state.path, name: ce.name });
@@ -1016,6 +1017,10 @@ function App() {
         case "Backspace":
           e.preventDefault();
           if (configRef.current.winm?.proc.backspaceUp !== false) panel.goParent();
+          return;
+        case ".":
+          e.preventDefault();
+          panel.goParent(); // "." 상위 디렉토리로 이동
           return;
         case " ":
           e.preventDefault();
@@ -1477,7 +1482,7 @@ function App() {
       {d?.kind === "fileList" && (
         <FileListDialog
           dir={(active === 0 ? left : right).state.path}
-          entries={(active === 0 ? left : right).state.entries}
+          entries={(active === 0 ? left : right).state.entries.filter((e) => !isDotDot(e))}
           onClose={() => setDialog(null)}
         />
       )}

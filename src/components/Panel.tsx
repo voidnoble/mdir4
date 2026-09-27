@@ -128,7 +128,9 @@ export default function Panel({
         style={hitStyle}
         onMouseDown={() => {
           onActivate();
-          api.setCursor(i);
+          // single click on ".." goes straight to the parent directory (WinM)
+          if (e.isDir && e.name === "..") api.goParent();
+          else api.setCursor(i);
         }}
         onDoubleClick={() => api.enterAtCursor()}
       >

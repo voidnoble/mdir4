@@ -34,6 +34,30 @@ function extOf(name: string): string {
   return i > 0 ? name.slice(i + 1).toLowerCase() : "";
 }
 
+/** True for the virtual parent-directory entry (".."). */
+export const isDotDot = (e: FsEntry): boolean => e.isDir && e.name === "..";
+
+/**
+ * Prepend the virtual ".." entry (WinM: first row of the file window) when the
+ * current directory has a parent. Applied after filter/sort so it always stays
+ * on top and is never a target of select/copy/move/delete/rename.
+ */
+function withDotDot(path: string, entries: FsEntry[]): FsEntry[] {
+  const parent = parentDir(path);
+  if (parent === path) return entries;
+  const dotdot: FsEntry = {
+    name: "..",
+    path: parent,
+    isDir: true,
+    isSymlink: false,
+    size: 0,
+    modifiedMs: null,
+    readonly: false,
+    hidden: false,
+  };
+  return [dotdot, ...entries];
+}
+
 export interface PanelState {
   path: string;
   /** entries after hidden/filter/sort */
@@ -180,7 +204,10 @@ export function usePanel(initialPath: string): PanelApi {
       .then((allEntries) => {
         if (loadId.current !== id) return;
         setState((s) => {
-          const entries = applyView(allEntries, s.showHidden, s.filter, s.sortKey, s.sortDir);
+          const entries = withDotDot(
+            path,
+            applyView(allEntries, s.showHidden, s.filter, s.sortKey, s.sortDir),
+          );
           return {
             ...s,
             path,
@@ -263,7 +290,7 @@ export function usePanel(initialPath: string): PanelApi {
   const toggleSelect = useCallback(() => {
     setState((s) => {
       const e = s.entries[s.cursor];
-      if (!e) return s;
+      if (!e || isDotDot(e)) return s;
       const next = new Set(s.selected);
       if (next.has(e.path)) next.delete(e.path);
       else next.add(e.path);
@@ -277,7 +304,10 @@ export function usePanel(initialPath: string): PanelApi {
   }, [toggleSelect, moveCursor]);
 
   const selectAll = useCallback(() => {
-    setState((s) => ({ ...s, selected: new Set(s.entries.map((e) => e.path)) }));
+    setState((s) => ({
+      ...s,
+      selected: new Set(s.entries.filter((e) => !isDotDot(e)).map((e) => e.path)),
+    }));
   }, []);
 
   const clearSelection = useCallback(() => {
@@ -287,7 +317,10 @@ export function usePanel(initialPath: string): PanelApi {
   const toggleHidden = useCallback(() => {
     setState((s) => {
       const showHidden = !s.showHidden;
-      const entries = applyView(s.allEntries, showHidden, s.filter, s.sortKey, s.sortDir);
+      const entries = withDotDot(
+        s.path,
+        applyView(s.allEntries, showHidden, s.filter, s.sortKey, s.sortDir),
+      );
       return {
         ...s,
         showHidden,
@@ -300,7 +333,10 @@ export function usePanel(initialPath: string): PanelApi {
   const setShowHidden = useCallback((showHidden: boolean) => {
     setState((s) => {
       if (s.showHidden === showHidden) return s;
-      const entries = applyView(s.allEntries, showHidden, s.filter, s.sortKey, s.sortDir);
+      const entries = withDotDot(
+        s.path,
+        applyView(s.allEntries, showHidden, s.filter, s.sortKey, s.sortDir),
+      );
       return {
         ...s,
         showHidden,
@@ -313,7 +349,10 @@ export function usePanel(initialPath: string): PanelApi {
   const setFilter = useCallback((filter: string) => {
     setState((s) => {
       if (s.filter === filter) return s;
-      const entries = applyView(s.allEntries, s.showHidden, filter, s.sortKey, s.sortDir);
+      const entries = withDotDot(
+        s.path,
+        applyView(s.allEntries, s.showHidden, filter, s.sortKey, s.sortDir),
+      );
       const kept = new Set([...s.selected].filter((p) => entries.some((e) => e.path === p)));
       return {
         ...s,
@@ -330,7 +369,10 @@ export function usePanel(initialPath: string): PanelApi {
       if (s.sortKey === sortKey && s.sortDir === sortDir) return s;
       // keep cursor on the same entry across re-sort
       const cur = s.entries[s.cursor]?.path;
-      const entries = applyView(s.allEntries, s.showHidden, s.filter, sortKey, sortDir);
+      const entries = withDotDot(
+        s.path,
+        applyView(s.allEntries, s.showHidden, s.filter, sortKey, sortDir),
+      );
       const cursor = cur ? Math.max(0, entries.findIndex((e) => e.path === cur)) : 0;
       return { ...s, sortKey, sortDir, entries, cursor };
     });
@@ -340,6 +382,7 @@ export function usePanel(initialPath: string): PanelApi {
     setState((s) => {
       const next = new Set<string>();
       for (const e of s.entries) {
+        if (isDotDot(e)) continue;
         if (!s.selected.has(e.path)) next.add(e.path);
       }
       return { ...s, selected: next };
@@ -350,7 +393,7 @@ export function usePanel(initialPath: string): PanelApi {
     setState((s) => {
       const next = new Set(s.selected);
       for (const e of s.entries) {
-        if (matchFilter(e.name, pattern)) {
+        if (!isDotDot(e) && matchFilter(e.name, pattern)) {
           if (select) next.add(e.path);
           else next.delete(e.path);
         }
@@ -363,7 +406,7 @@ export function usePanel(initialPath: string): PanelApi {
     const s = stateRef.current;
     if (s.selected.size > 0) return [...s.selected];
     const e = s.entries[s.cursor];
-    return e ? [e.path] : [];
+    return e && !isDotDot(e) ? [e.path] : [];
   }, []);
 
   const typeAhead = useCallback(
