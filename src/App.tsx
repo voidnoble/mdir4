@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import Panel from "./components/Panel";
 import Toolbar, { type ToolDef } from "./components/Toolbar";
@@ -42,7 +42,9 @@ import PropsDialog from "./dialogs/PropsDialog";
 import SelectDialog from "./dialogs/SelectDialog";
 import { usePanel } from "./hooks/usePanel";
 import { getLang, setLang, useT } from "./i18n";
-import { buildAppMenu, type AppMenuActions } from "./lib/appMenu";
+import MenuBar from "./components/MenuBar";
+import { buildWinMMenu, PROG_FILTER, ZIP_FILTER, type WinMItem, type WinMActions } from "./menus/winm";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { AppConfig, ExtAssoc, QcdEntry } from "./lib/config";
 import { defaultConfig, loadConfig, saveConfig } from "./lib/config";
 import type { OpSummary, OverwritePolicy } from "./lib/fs";
@@ -53,6 +55,7 @@ import {
   fsHome,
   fsMove,
   fsRename,
+  fsRoots,
   fsShellOpen,
   fsSplit,
   fsZipCreate,
@@ -117,6 +120,12 @@ function App() {
   const [ready, setReady] = useState(false);
   const [dialog, setDialog] = useState<DialogState>(null);
   const [config, setConfig] = useState<AppConfig>(defaultConfig);
+  // WinM 보기 메뉴 toggles (chrome visibility) + 줄간격 (row height)
+  const [showToolbar, setShowToolbar] = useState(true);
+  const [showPathbar, setShowPathbar] = useState(true);
+  const [showColHeader, setShowColHeader] = useState(true);
+  const [showStatusbar, setShowStatusbar] = useState(true);
+  const [rowH, setRowH] = useState(26);
   const dialogRef = useRef(dialog);
   dialogRef.current = dialog;
   const panelsRef = useRef({ left, right, active });
@@ -396,6 +405,50 @@ function App() {
     setDialog(null);
   }, []);
 
+  // WinM menu actions: select entries sharing the cursor entry's extension/name
+  const selectSameExt = useCallback(() => {
+    const { left, right, active } = panelsRef.current;
+    const panel = active === 0 ? left : right;
+    const ce = cursorEntry();
+    if (!ce || ce.isDir) return;
+    const dot = ce.name.lastIndexOf(".");
+    if (dot > 0) panel.selectByPattern(`*${ce.name.slice(dot)}`, true);
+  }, [cursorEntry]);
+
+  const selectSameName = useCallback(() => {
+    const { left, right, active } = panelsRef.current;
+    const panel = active === 0 ? left : right;
+    const ce = cursorEntry();
+    if (!ce || ce.isDir) return;
+    const dot = ce.name.lastIndexOf(".");
+    const base = dot > 0 ? ce.name.slice(0, dot) : ce.name;
+    if (base) panel.selectByPattern(`${base}.*`, true);
+  }, [cursorEntry]);
+
+  const goRoot = useCallback(() => {
+    const { left, right, active } = panelsRef.current;
+    void fsRoots().then((roots) => {
+      if (roots.length > 0) (active === 0 ? left : right).load(roots[0].path);
+    });
+  }, []);
+
+  const quitApp = useCallback(() => {
+    try {
+      void getCurrentWindow().close().catch(() => window.close());
+    } catch {
+      window.close();
+    }
+  }, []);
+
+  const setLangUi = useCallback(
+    (l: "ko" | "en") => {
+      const cfg = { ...configRef.current, lang: l };
+      applyConfig(cfg);
+      persistConfig(cfg);
+    },
+    [applyConfig, persistConfig],
+  );
+
   const jumpQcd = useCallback(
     (path: string) => {
       selectMcd(path);
@@ -537,96 +590,6 @@ function App() {
 
   /** ---- native app menu (macOS: system menu bar) ---- */
 
-  // Always-fresh action table; the native menu dispatches through this ref
-  // so menu item handlers never capture stale closures.
-  const menuActionsRef = useRef<AppMenuActions | null>(null);
-  menuActionsRef.current = {
-    copy: () => openCopy("copy"),
-    move: () => openCopy("move"),
-    del: () => openDelete(),
-    rename: () => openRename(),
-    mkdir: () => {
-      const { left, right, active } = panelsRef.current;
-      (active === 0 ? left : right).setMkdirMode(true);
-    },
-    openWith: () => void openWithDefault(),
-    props: () => openProps(),
-    selectAll: () => {
-      const { left, right, active } = panelsRef.current;
-      (active === 0 ? left : right).selectAll();
-    },
-    invertSel: () => {
-      const { left, right, active } = panelsRef.current;
-      (active === 0 ? left : right).invertSelection();
-    },
-    selPattern: (select: boolean) => setDialog({ kind: "select", select }),
-    mcd: () => openMcd(),
-    qcd: () => openQcd(),
-    back: () => {
-      const { left, right, active } = panelsRef.current;
-      (active === 0 ? left : right).goBack();
-    },
-    forward: () => {
-      const { left, right, active } = panelsRef.current;
-      (active === 0 ? left : right).goForward();
-    },
-    refresh: () => {
-      const { left, right, active } = panelsRef.current;
-      (active === 0 ? left : right).refresh();
-    },
-    zip: () => openZip(),
-    unzip: () => {
-      const ce = cursorEntry();
-      if (ce && !ce.isDir && ce.name.toLowerCase().endsWith(".zip")) openExtract(ce.path);
-    },
-    zipview: () => openZipView(),
-    split: () => openSplitCombine(),
-    filter: () => setDialog({ kind: "filter" }),
-    toggleHidden: () => {
-      const { left, right, active } = panelsRef.current;
-      (active === 0 ? left : right).toggleHidden();
-    },
-    fileList: () => setDialog({ kind: "fileList" }),
-    batchRename: () => openBatchRename(),
-    settings: () => openSettings(),
-    help: () => setDialog({ kind: "help" }),
-  };
-
-  // (Re)build the native menu on mount and whenever the UI language changes.
-  const uiLang = getLang();
-  useEffect(() => {
-    const via = (fn: (m: AppMenuActions) => void) => () => {
-      const m = menuActionsRef.current;
-      if (m) fn(m);
-    };
-    void buildAppMenu({
-      copy: via((m) => m.copy()),
-      move: via((m) => m.move()),
-      del: via((m) => m.del()),
-      rename: via((m) => m.rename()),
-      mkdir: via((m) => m.mkdir()),
-      openWith: via((m) => m.openWith()),
-      props: via((m) => m.props()),
-      selectAll: via((m) => m.selectAll()),
-      invertSel: via((m) => m.invertSel()),
-      selPattern: (select: boolean) => via((m) => m.selPattern(select))(),
-      mcd: via((m) => m.mcd()),
-      qcd: via((m) => m.qcd()),
-      back: via((m) => m.back()),
-      forward: via((m) => m.forward()),
-      refresh: via((m) => m.refresh()),
-      zip: via((m) => m.zip()),
-      unzip: via((m) => m.unzip()),
-      zipview: via((m) => m.zipview()),
-      split: via((m) => m.split()),
-      filter: via((m) => m.filter()),
-      toggleHidden: via((m) => m.toggleHidden()),
-      fileList: via((m) => m.fileList()),
-      batchRename: via((m) => m.batchRename()),
-      settings: via((m) => m.settings()),
-      help: via((m) => m.help()),
-    });
-  }, [uiLang]);
 
   /** ---- keyboard ---- */
 
@@ -639,70 +602,265 @@ function App() {
       const { left, right, active } = panelsRef.current;
       const panel = active === 0 ? left : right;
 
-      // settings: macOS Cmd+, / others Ctrl+F12 (WinM: F12)
+      // settings: macOS Cmd+, / others Ctrl+F12 (WinM: 환경 설정)
       if ((e.metaKey && e.key === ",") || (e.ctrlKey && e.key === "F12")) {
         e.preventDefault();
         openSettings();
         return;
       }
-
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "a" || e.key === "A")) {
+      // macOS: Cmd+A = select all (WinM reserves Ctrl+A for compress)
+      if (e.metaKey && !e.ctrlKey && !e.altKey && (e.key === "a" || e.key === "A")) {
         e.preventDefault();
         panel.selectAll();
         return;
       }
 
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "r" || e.key === "R")) {
-        e.preventDefault();
-        panel.refresh();
+      // ---- numpad combos (WinM 편집/보기 메뉴) ----
+      if (
+        e.code === "NumpadAdd" ||
+        e.code === "NumpadSubtract" ||
+        e.code === "NumpadMultiply" ||
+        e.code === "NumpadDivide"
+      ) {
+        if (e.ctrlKey && e.altKey && e.code === "NumpadAdd") {
+          e.preventDefault();
+          setRowH((h) => Math.min(48, h + 4)); // Ctrl+Alt+Num+ 간격 넓힘
+          return;
+        }
+        if (e.ctrlKey && e.altKey && e.code === "NumpadSubtract") {
+          e.preventDefault();
+          setRowH((h) => Math.max(18, h - 4)); // Ctrl+Alt+Num- 간격 좁힘
+          return;
+        }
+        if (e.ctrlKey && !e.altKey && e.code === "NumpadAdd") {
+          e.preventDefault();
+          setDialog({ kind: "select", select: true }); // Ctrl+Num+ 이름으로 선택
+          return;
+        }
+        if (e.ctrlKey && !e.altKey && e.code === "NumpadSubtract") {
+          e.preventDefault();
+          setDialog({ kind: "select", select: false }); // Ctrl+Num- 이름으로 해제
+          return;
+        }
+        if (!e.ctrlKey && !e.altKey && e.code === "NumpadDivide") {
+          e.preventDefault();
+          selectSameExt(); // Num/ 같은 확장자 선택
+          return;
+        }
+        if (e.ctrlKey && !e.altKey && e.code === "NumpadDivide") {
+          e.preventDefault();
+          selectSameName(); // Ctrl+Num/ 같은 이름 선택
+          return;
+        }
+        if (e.ctrlKey && !e.altKey && e.code === "NumpadMultiply") {
+          e.preventDefault();
+          panel.invertSelection(); // Ctrl+Num* 선택 반전
+          return;
+        }
         return;
       }
 
-      // Alt+letter shortcuts (WinM file-menu style)
-      if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
+      // ---- Ctrl+Alt combos (WinM 파일 메뉴) ----
+      if (e.ctrlKey && e.altKey && !e.metaKey && e.key.length === 1) {
         switch (e.key.toLowerCase()) {
+          case "s": // 파일 분할
+          case "c": // 파일 결합
+          case "m": // 파일 합치기
+            e.preventDefault();
+            openSplitCombine();
+            return;
+          default:
+            break;
+        }
+      }
+
+      // ---- Shift+Ctrl combos (WinM 보기 메뉴) ----
+      if (e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey && e.key.length === 1) {
+        switch (e.key) {
+          case "P":
+          case "p":
+            e.preventDefault();
+            setShowPathbar((v) => !v); // 경로 표시줄
+            return;
+          case "H":
+          case "h":
+            e.preventDefault();
+            setShowColHeader((v) => !v); // 헤더 컨트롤
+            return;
+          case "S":
+          case "s":
+            e.preventDefault();
+            setShowStatusbar((v) => !v); // 상태 표시줄
+            return;
+          case "!":
+            e.preventDefault();
+            panel.setFilter(""); // 모든 파일
+            return;
+          case "@":
+            e.preventDefault();
+            panel.setFilter(PROG_FILTER); // 프로그램
+            return;
+          case "#":
+            e.preventDefault();
+            panel.setFilter(ZIP_FILTER); // 압축파일
+            return;
+          case ")":
+            e.preventDefault();
+            setDialog({ kind: "filter" }); // 사용자 지정
+            return;
+          default:
+            break;
+        }
+      }
+
+      // ---- Ctrl combos (WinM 파일/경로/압축 메뉴) ----
+      if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        if (e.key === "Enter") {
+          e.preventDefault(); // Ctrl+Enter 파라미터 입력 실행 (미구현)
+          return;
+        }
+        if (e.key === "Backspace") {
+          e.preventDefault();
+          panel.goBack(); // Ctrl+BkSp 마지막 폴더로
+          return;
+        }
+      }
+      if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && e.key.length === 1) {
+        switch (e.key.toLowerCase()) {
+          case "r":
+            e.preventDefault();
+            panel.refresh(); // Ctrl+R 새로 고침
+            return;
+          case "g":
+            e.preventDefault();
+            setDialog({ kind: "path" }); // Ctrl+G 경로 바꾸기
+            return;
+          case "a":
+            e.preventDefault();
+            openZip(); // Ctrl+A 압축하기
+            return;
           case "m":
             e.preventDefault();
-            openCopy("move");
+            openZip(); // Ctrl+M 압축후 삭제
+            return;
+          case "x": {
+            // Ctrl+X 압축풀기
+            e.preventDefault();
+            const ce = cursorEntry();
+            if (ce && !ce.isDir && ce.name.toLowerCase().endsWith(".zip")) openExtract(ce.path);
+            return;
+          }
+          case "z":
+            e.preventDefault();
+            openProps(); // Ctrl+Z 속성/날짜 바꾸기
+            return;
+          default:
+            return; // swallow other Ctrl+letter combos
+        }
+      }
+
+      // ---- Alt+letter combos (WinM action accelerators) ----
+      if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
+        switch (e.key.toLowerCase()) {
+          case "c":
+            e.preventDefault();
+            openCopy("copy"); // 복사
+            return;
+          case "m":
+            e.preventDefault();
+            openCopy("move"); // 이동
             return;
           case "d":
             e.preventDefault();
-            openDelete();
+            openDelete(); // 삭제
             return;
           case "r":
             e.preventDefault();
-            openRename();
+            openRename(); // 이름 바꾸기
             return;
           case "k":
             e.preventDefault();
-            panel.setMkdirMode(true);
+            panel.setMkdirMode(true); // 폴더 만들기
             return;
+          case "v":
+            e.preventDefault();
+            void openWithDefault(); // 파일 보기
+            return;
+          case "g":
+            e.preventDefault();
+            void openWithDefault(); // 파일 편집
+            return;
+          case "x":
+            e.preventDefault();
+            quitApp(); // 종료
+            return;
+          case "z":
+            e.preventDefault();
+            panel.toggleHidden(); // 숨김 파일
+            return;
+          case "o":
+          case "n":
+            e.preventDefault();
+            panel.setSort("name", "asc"); // 정렬안함 / 이름 정렬
+            return;
+          case "e":
+            e.preventDefault();
+            panel.setSort("ext", "asc"); // 확장자 정렬
+            return;
+          case "s":
+            e.preventDefault();
+            panel.setSort("size", "asc"); // 크기 정렬
+            return;
+          case "t":
+            e.preventDefault();
+            panel.setSort("mtime", "asc"); // 날짜 정렬
+            return;
+          case "-":
+            e.preventDefault();
+            panel.setSort(
+              panel.state.sortKey,
+              panel.state.sortDir === "asc" ? "desc" : "asc",
+            ); // 오름차순 토글
+            return;
+          default:
+            break;
         }
+        // Alt+F/I/P/Y/B/L/H are menu mnemonics (handled by MenuBar)
+        return;
       }
 
       // Alt+navigation
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
         if (e.key === "ArrowLeft") {
           e.preventDefault();
-          panel.goBack();
+          panel.goBack(); // 뒤로
           return;
         }
         if (e.key === "ArrowRight") {
           e.preventDefault();
-          panel.goForward();
+          panel.goForward(); // 앞으로
           return;
         }
         if (e.key === "Enter") {
           e.preventDefault();
-          openProps();
+          openProps(); // Alt+Enter 등록정보
           return;
         }
+        return;
       }
 
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "i" || e.key === "I")) {
-        e.preventDefault();
-        panel.invertSelection();
-        return;
+      // Shift+Enter: 압축파일 보기 / Shift+F12: 드라이브 상자
+      if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          openZipView();
+          return;
+        }
+        if (e.key === "F12") {
+          e.preventDefault();
+          openDrive();
+          return;
+        }
       }
 
       switch (e.key) {
@@ -816,65 +974,11 @@ function App() {
           break;
       }
 
-      // MDir single-letter hotkeys (no modifiers)
+      // type-ahead search: any printable char without modifiers jumps to the
+      // first entry starting with the typed text. WinM binds every action to
+      // an Alt/Ctrl combo, so all letters are free for search.
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        // Shift+N = deselect by pattern (keep before lowercase switch)
-        if (e.key === "N") {
-          setDialog({ kind: "select", select: false });
-          return;
-        }
-        switch (e.key.toLowerCase()) {
-          case "c":
-            openCopy("copy");
-            return;
-          case "m":
-            openCopy("move");
-            return;
-          case "d":
-            openDelete();
-            return;
-          case "r":
-            openRename();
-            return;
-          case "k":
-            panel.setMkdirMode(true);
-            return;
-          case "z":
-            panel.toggleHidden();
-            return;
-          case "u":
-            panel.selectAll();
-            return;
-          case "s":
-            openSplitCombine();
-            return;
-          case "f":
-            setDialog({ kind: "filter" });
-            return;
-          case "v":
-            panel.invertSelection();
-            return;
-          case "n":
-            setDialog({ kind: "select", select: true });
-            return;
-          case "o":
-            openWithDefault();
-            return;
-          case "l":
-            setDialog({ kind: "fileList" });
-            return;
-          case "a": {
-            const ce = cursorEntry();
-            if (ce && !ce.isDir && ce.name.toLowerCase().endsWith(".zip")) openExtract(ce.path);
-            else openZip();
-            return;
-          }
-          default:
-            // type-ahead search: jump to the first entry starting with the
-            // typed text (single-letter hotkeys above take precedence)
-            panel.typeAhead(e.key);
-            return;
-        }
+        panel.typeAhead(e.key);
       }
     },
     [
@@ -889,10 +993,12 @@ function App() {
       openQcd,
       openDrive,
       openSplitCombine,
-      openBatchRename,
       openProps,
       openWithDefault,
       cursorEntry,
+      selectSameExt,
+      selectSameName,
+      quitApp,
     ],
   );
 
@@ -904,6 +1010,91 @@ function App() {
   const d = dialog;
 
   const activePanel = active === 0 ? left : right;
+
+  // ---- WinM menu (docs/reference/winm-menus.png) ----
+  // Rendered as an in-window menu bar; actions close over fresh render state.
+  const winmActions: WinMActions = {
+    copy: () => openCopy("copy"),
+    move: () => openCopy("move"),
+    del: () => openDelete(),
+    rename: () => openRename(),
+    mkdir: () => activePanel.setMkdirMode(true),
+    props: () => openProps(),
+    split: () => openSplitCombine(),
+    viewFile: () => void openWithDefault(),
+    editFile: () => void openWithDefault(),
+    fileList: () => setDialog({ kind: "fileList" }),
+    quit: () => quitApp(),
+    selPattern: (select: boolean) => setDialog({ kind: "select", select }),
+    sameExt: () => selectSameExt(),
+    sameName: () => selectSameName(),
+    invertSel: () => activePanel.invertSelection(),
+    selectAll: () => activePanel.selectAll(),
+    clearSel: () => activePanel.clearSelection(),
+    mcd: () => openMcd(),
+    qcd: () => openQcd(),
+    drive: () => openDrive(),
+    back: () => activePanel.goBack(),
+    forward: () => activePanel.goForward(),
+    changePath: () => setDialog({ kind: "path" }),
+    up: () => activePanel.goParent(),
+    root: () => goRoot(),
+    zip: () => openZip(),
+    unzip: () => {
+      const ce = cursorEntry();
+      if (ce && !ce.isDir && ce.name.toLowerCase().endsWith(".zip")) openExtract(ce.path);
+    },
+    zipview: () => openZipView(),
+    toggleToolbar: () => setShowToolbar((v) => !v),
+    togglePathbar: () => setShowPathbar((v) => !v),
+    toggleHeader: () => setShowColHeader((v) => !v),
+    toggleStatusbar: () => setShowStatusbar((v) => !v),
+    toggleHidden: () => activePanel.toggleHidden(),
+    setSort: (key, dir) => activePanel.setSort(key, dir),
+    toggleSortDir: () =>
+      activePanel.setSort(
+        activePanel.state.sortKey,
+        activePanel.state.sortDir === "asc" ? "desc" : "asc",
+      ),
+    setFilterPreset: (p) => activePanel.setFilter(p),
+    filterDialog: () => setDialog({ kind: "filter" }),
+    widerRows: () => setRowH((h) => Math.min(48, h + 4)),
+    narrowerRows: () => setRowH((h) => Math.max(18, h - 4)),
+    refresh: () => activePanel.refresh(),
+    extConfig: () => openSettings(),
+    setLangUi: (l) => setLangUi(l),
+    settings: () => openSettings(),
+    help: () => setDialog({ kind: "help" }),
+  };
+
+  const uiLang = getLang();
+  const menus = useMemo(
+    () =>
+      buildWinMMenu({
+        toolbar: showToolbar,
+        pathbar: showPathbar,
+        header: showColHeader,
+        statusbar: showStatusbar,
+        hidden: activePanel.state.showHidden,
+        sortKey: activePanel.state.sortKey,
+        sortAsc: activePanel.state.sortDir === "asc",
+        filter: activePanel.state.filter,
+        lang: uiLang === "en" ? "en" : "ko",
+      }),
+    [
+      showToolbar,
+      showPathbar,
+      showColHeader,
+      showStatusbar,
+      activePanel,
+      uiLang,
+    ],
+  );
+
+  const fireMenuItem = (item: WinMItem) => {
+    if (!item.act) return;
+    (winmActions[item.act] as (...a: unknown[]) => void)(...(item.args ?? []));
+  };
 
   // Keybar items: evenly distributed, mouse click invokes the same action as the shortcut.
   // Mirrors the WinM reference keybar: F2..F9.
@@ -971,12 +1162,15 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <Toolbar tools={tools} />
-        <PathBar
-          path={activePanel.state.path}
-          filter={activePanel.state.filter}
-          onOpen={() => setDialog({ kind: "path" })}
-        />
+        <MenuBar menus={menus} onAction={fireMenuItem} />
+        {showToolbar && <Toolbar tools={tools} />}
+        {showPathbar && (
+          <PathBar
+            path={activePanel.state.path}
+            filter={activePanel.state.filter}
+            onOpen={() => setDialog({ kind: "path" })}
+          />
+        )}
       </header>
       <main className="panes">
         {ready && (
@@ -987,6 +1181,8 @@ function App() {
               onActivate={() => setActive(0)}
               label={t("panel.left")}
               extColors={config.customExtColors}
+              showColHeader={showColHeader}
+              rowH={rowH}
             />
             <Panel
               api={right}
@@ -994,12 +1190,14 @@ function App() {
               onActivate={() => setActive(1)}
               label={t("panel.right")}
               extColors={config.customExtColors}
+              showColHeader={showColHeader}
+              rowH={rowH}
             />
           </>
         )}
       </main>
       <footer className="app-footer">
-        <StatusBar panel={activePanel} />
+        {showStatusbar && <StatusBar panel={activePanel} />}
         <div className="keybar">{keybarItems.map(kbItem)}</div>
       </footer>
 

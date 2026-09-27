@@ -10,6 +10,8 @@ interface Row {
   desc: string;
 }
 
+/** Shortcut reference. Mirrors the WinM menu accelerators (winm-menus.png):
+ *  every action is an Alt/Ctrl/Shift combo; plain letters are type-ahead search. */
 export default function HelpDialog({ onClose }: HelpDialogProps) {
   const t = useT();
 
@@ -22,15 +24,17 @@ export default function HelpDialog({ onClose }: HelpDialogProps) {
         { keys: "Backspace", desc: t("help.parent") },
         { keys: "Tab", desc: t("help.switch") },
         { keys: "Alt+← / Alt+→", desc: t("help.histback") },
+        { keys: "Ctrl+BkSp", desc: t("help.lastfolder") },
       ],
     },
     {
       title: t("help.sel"),
       rows: [
         { keys: "Space / Insert", desc: t("help.togglesel") },
-        { keys: "U / Ctrl+A", desc: t("help.selall") },
-        { keys: "V / Ctrl+I", desc: t("help.invert") },
-        { keys: "N / Shift+N", desc: t("help.bypattern") },
+        { keys: "Ctrl+Num + / Ctrl+Num -", desc: t("help.bypattern") },
+        { keys: "Num /", desc: t("help.sameext") },
+        { keys: "Ctrl+Num /", desc: t("help.samename") },
+        { keys: "Ctrl+Num *", desc: t("help.invert") },
         { keys: "Esc", desc: t("help.clearsel") },
       ],
     },
@@ -38,17 +42,29 @@ export default function HelpDialog({ onClose }: HelpDialogProps) {
       title: t("help.file"),
       rows: [
         { keys: "F2 / Ctrl+R", desc: t("help.refresh") },
-        { keys: "F5 / C", desc: t("help.copy") },
-        { keys: "F6 / R", desc: t("help.rename") },
-        { keys: "F7 / K", desc: t("help.mkdir") },
-        { keys: "F8 / Del / D", desc: t("help.delete") },
-        { keys: "A", desc: t("help.archive") },
-        { keys: "S", desc: t("help.split") },
-        { keys: "O", desc: t("help.open") },
-        { keys: "L", desc: t("help.flist") },
-        { keys: "F", desc: t("help.filter") },
-        { keys: "Z", desc: t("help.hidden") },
-        { keys: "Alt+Enter", desc: t("help.props") },
+        { keys: "F5 / Alt+C", desc: t("help.copy") },
+        { keys: "F4 / Alt+M", desc: t("help.movefile") },
+        { keys: "F6 / Alt+R", desc: t("help.rename") },
+        { keys: "F7 / Alt+K", desc: t("help.mkdir") },
+        { keys: "F8 / Del / Alt+D", desc: t("help.delete") },
+        { keys: "Ctrl+A", desc: t("help.archive") },
+        { keys: "Ctrl+X", desc: t("help.extract") },
+        { keys: "Shift+Enter", desc: t("help.zipview") },
+        { keys: "Ctrl+Alt+S/C/M", desc: t("help.split") },
+        { keys: "Alt+V / Alt+G", desc: t("help.open") },
+        { keys: "Alt+Enter / Ctrl+Z", desc: t("help.props") },
+        { keys: "Alt+X", desc: t("help.quit") },
+      ],
+    },
+    {
+      title: t("help.view"),
+      rows: [
+        { keys: "Alt+Z", desc: t("help.hidden") },
+        { keys: "Alt+N / Alt+E / Alt+S / Alt+T", desc: t("help.sort") },
+        { keys: "Alt+-", desc: t("help.sortdir") },
+        { keys: "Shift+Ctrl+1/2/3/0", desc: t("help.filter") },
+        { keys: "Ctrl+Alt+Num +/-", desc: t("help.rowheight") },
+        { keys: "Shift+Ctrl+P/H/S", desc: t("help.bars") },
       ],
     },
     {
@@ -56,6 +72,8 @@ export default function HelpDialog({ onClose }: HelpDialogProps) {
       rows: [
         { keys: "F10", desc: t("help.mcd") },
         { keys: "F11", desc: t("help.qcd") },
+        { keys: "Shift+F12", desc: t("help.drive") },
+        { keys: "Ctrl+G", desc: t("help.changepath") },
       ],
     },
     {

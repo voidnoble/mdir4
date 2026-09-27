@@ -210,6 +210,113 @@ body,
   outline-offset: -3px;
 }
 
+/* ---------- WinM menu bar (per docs/reference/winm-menus.png) ---------- */
+
+.menubar {
+  display: flex;
+  align-items: stretch;
+  background: var(--bar-bg);
+  border-bottom: 1px solid var(--bar-edge-lo);
+  position: relative;
+  z-index: 600;
+}
+
+.mtop-wrap {
+  position: relative;
+}
+
+.mtop {
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  color: var(--bar-fg);
+  padding: 5px 10px;
+  cursor: default;
+  font-family: inherit;
+}
+
+.mtop:hover,
+.mtop.open {
+  background: rgba(0, 120, 215, 0.18);
+}
+
+.mdrop {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 270px;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  background: #ffffff;
+  color: #000;
+  border: 1px solid #a0a0a0;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.28);
+  z-index: 601;
+}
+
+.mdrop.msub {
+  top: -3px;
+  left: 100%;
+}
+
+.mitem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.mitem .mcheck {
+  flex: none;
+  width: 20px;
+  text-align: center;
+}
+
+.mitem .mlabel {
+  flex: 1;
+  padding-right: 8px;
+}
+
+.mitem .msc {
+  flex: none;
+  margin-left: 28px;
+  color: #1a1a1a;
+}
+
+.mitem .msub-arrow {
+  flex: none;
+  margin-left: 10px;
+  font-size: 9px;
+}
+
+.mitem.cursor {
+  background: #0078d7;
+  color: #fff;
+}
+
+.mitem.cursor .msc {
+  color: #fff;
+}
+
+.mitem.disabled {
+  color: #808080;
+  cursor: default;
+}
+
+.mitem.disabled .msc {
+  color: #a0a0a0;
+}
+
+.msep {
+  height: 1px;
+  background: #d4d0c8;
+  margin: 4px 2px;
+}
+
 /* inline new-folder input at the top of the panel */
 .mkdir-row {
   display: flex;

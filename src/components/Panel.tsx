@@ -15,9 +15,19 @@ interface PanelProps {
   onActivate: () => void;
   label: string;
   extColors?: ExtColors;
+  showColHeader?: boolean;
+  rowH?: number;
 }
 
-export default function Panel({ api, active, onActivate, label, extColors }: PanelProps) {
+export default function Panel({
+  api,
+  active,
+  onActivate,
+  label,
+  extColors,
+  showColHeader = true,
+  rowH = ROW_H,
+}: PanelProps) {
   const t = useT();
   const { state, listRef, mkdirMode, setMkdirMode } = api;
   const { path, entries, cursor, selected, loading, error } = state;
@@ -99,7 +109,7 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
         </div>
       )}
 
-      <div className="col-header">
+      {showColHeader && <div className="col-header">
         <span className="c-icon" />
         <button
           className={`c-name sort-hdr${state.sortKey === "name" ? " sorted" : ""}`}
@@ -133,7 +143,7 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
           {t("panel.date")}
           {state.sortKey === "mtime" ? (state.sortDir === "asc" ? " ▲" : " ▼") : ""}
         </button>
-      </div>
+      </div>}
 
       <div className="pane-body">
         {loading ? (
@@ -149,7 +159,7 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
           <VirtualList
             ref={listRef}
             itemCount={entries.length}
-            rowHeight={ROW_H}
+            rowHeight={rowH}
             resetKey={path}
             renderRow={renderRow}
           />
