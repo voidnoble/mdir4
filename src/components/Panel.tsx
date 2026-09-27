@@ -27,6 +27,8 @@ interface PanelProps {
   /** per-panel path bar (WinM reference: peach when active) */
   showPathBar?: boolean;
   onOpenPath?: () => void;
+  /** peach active tint on the path bar; off in single-pane mode (macmdir-default-001.png) */
+  activePathTint?: boolean;
   colSep?: boolean;
   rowSep?: boolean;
   folderColor?: boolean;
@@ -43,6 +45,7 @@ export default function Panel({
   showColHeader = true,
   showPathBar = true,
   onOpenPath,
+  activePathTint = true,
   colSep = true,
   rowSep = true,
   folderColor = true,
@@ -152,7 +155,7 @@ export default function Panel({
           path={path}
           filter={state.filter}
           searchBuf={state.searchBuf}
-          active={active}
+          active={active && activePathTint}
           onOpen={() => {
             onActivate();
             onOpenPath?.();

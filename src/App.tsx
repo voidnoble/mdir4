@@ -1301,6 +1301,7 @@ function App() {
         extColorOn={w?.color.extEnabled !== false}
         showColHeader={showColHeader && (isLeft ? colHeaderL : colHeaderR)}
         showPathBar={showPathbar && (isLeft ? pathbarL : pathbarR)}
+        activePathTint={layout !== "single"}
         onOpenPath={() => {
           setActive(side);
           setDialog({ kind: "path" });
