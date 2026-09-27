@@ -860,6 +860,24 @@ function App() {
 
   const d = dialog;
 
+  // Keybar item: highlight the leading shortcut key (e.g. "F2" in "F2 새로고침").
+  const kb = (key: string) => {
+    const s = t(key);
+    const i = s.indexOf(" ");
+    return (
+      <span className="done" key={key}>
+        {i > 0 ? (
+          <>
+            <b>{s.slice(0, i)}</b>
+            {s.slice(i)}
+          </>
+        ) : (
+          s
+        )}
+      </span>
+    );
+  };
+
   return (
     <div className="app">
       <main className="panes">
@@ -883,23 +901,23 @@ function App() {
         )}
       </main>
       <footer className="keybar">
-        <span className="done">{t("keybar.help")}</span>
-        <span className="done">{t("keybar.refresh")}</span>
-        <span className="done">{t("keybar.copy")}</span>
-        <span className="done">{t("keybar.rename")}</span>
-        <span className="done">{t("keybar.mkdir")}</span>
-        <span className="done">{t("keybar.delete")}</span>
-        <span className="done">{t("keybar.switch")}</span>
-        <span className="done">{t("keybar.select")}</span>
-        <span className="done">{t("keybar.archive")}</span>
-        <span className="done">{t("keybar.split")}</span>
-        <span className="done">{t("keybar.open")}</span>
-        <span className="done">{t("keybar.filter")}</span>
-        <span className="done">{t("keybar.flist")}</span>
-        <span className="done">{t("keybar.mcd")}</span>
-        <span className="done">{t("keybar.qcd")}</span>
-        <span className="done">{t("keybar.props")}</span>
-        <span className="done">{t("keybar.settings")}</span>
+        {kb("keybar.help")}
+        {kb("keybar.refresh")}
+        {kb("keybar.copy")}
+        {kb("keybar.rename")}
+        {kb("keybar.mkdir")}
+        {kb("keybar.delete")}
+        {kb("keybar.switch")}
+        {kb("keybar.select")}
+        {kb("keybar.archive")}
+        {kb("keybar.split")}
+        {kb("keybar.open")}
+        {kb("keybar.filter")}
+        {kb("keybar.flist")}
+        {kb("keybar.mcd")}
+        {kb("keybar.qcd")}
+        {kb("keybar.props")}
+        {kb("keybar.settings")}
       </footer>
 
       {d?.kind === "copy" && (

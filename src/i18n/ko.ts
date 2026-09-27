@@ -56,6 +56,7 @@ export const ko: Record<string, string> = {
   "keybar.settings": "F12 환경설정",
 
   "panel.name": "이름",
+  "panel.ext": "확장",
   "panel.size": "크기",
   "panel.date": "수정한 날짜",
   "panel.loading": "읽는 중…",
@@ -266,6 +267,7 @@ export const ko: Record<string, string> = {
   "help.help": "이 도움말",
   "help.settings": "환경설정",
   "sort.byName": "이름순 정렬",
+  "sort.byExt": "확장자순 정렬",
   "sort.bySize": "크기순 정렬",
   "sort.byDate": "날짜순 정렬",
   "panel.filter": "필터: {f}",

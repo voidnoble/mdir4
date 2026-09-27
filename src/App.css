@@ -1,28 +1,31 @@
 :root {
   font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
   font-size: 13px;
-  /* dark (default) */
-  --bg: #1e1e1e;
-  --bg2: #252526;
-  --bg3: #2d2d2d;
-  --bg4: #252525;
-  --fg: #e8e8e8;
-  --fg-soft: #ccc;
-  --fg-dim: #aaa;
-  --fg-faint: #888;
-  --fg-faint2: #999;
-  --fg-faint3: #777;
+  /* dark (default) — WinM classic */
+  --bg: #000000;
+  --bg2: #101010;
+  --bg3: #1c1c1c;
+  --bg4: #161616;
+  --fg: #d8d8d8;
+  --fg-soft: #c4c4c4;
+  --fg-dim: #999999;
+  --fg-faint: #777777;
+  --fg-faint2: #888888;
+  --fg-faint3: #666666;
   --crumb: #d0d0d0;
-  --border: #3f3f3f;
+  --border: #333333;
   --accent: #0e639c;
   --accent-hover: #1177bb;
   --on-accent: #fff;
-  --cursor-bg: #04395e;
-  --cursor-fg: #fff;
-  --cursor-fg-dim: #cfe3f5;
-  --row-hover: #2a2d2e;
-  --sel-name: #ffd866;
-  --sel-name-cursor: #ffe9a8;
+  --cursor-bg: #ff0000;
+  --cursor-fg: #ffffff;
+  --cursor-fg-dim: #ffc9c9;
+  --cursor-dim-bg: #7a0000;
+  --cursor-dim-fg: #ffffff;
+  --row-hover: #1a1a1a;
+  --sel-name: #ffff00;
+  --sel-name-cursor: #ffff00;
+  --dir-fg: #ff0000;
   --info: #8cdcfe;
   --danger: #a4262c;
   --danger-hover: #c02e35;
@@ -30,9 +33,10 @@
   --warn-bg: #4a3a00;
   --warn-border: #8a6d00;
   --warn-fg: #ffd866;
-  --btn-bg: #3f3f3f;
-  --btn-hover: #4a4a4a;
-  --btn-border: #555;
+  --btn-bg: #2a2a2a;
+  --btn-hover: #383838;
+  --btn-border: #4a4a4a;
+  --key-fg: #6cb8ff;
   color: var(--fg);
   background-color: var(--bg);
 }
@@ -56,9 +60,12 @@
   --cursor-bg: #cfe8f5;
   --cursor-fg: #1e1e1e;
   --cursor-fg-dim: #1a4a6a;
+  --cursor-dim-bg: #e8b4b4;
+  --cursor-dim-fg: #1e1e1e;
   --row-hover: #e8e8e8;
   --sel-name: #8a6d00;
   --sel-name-cursor: #7a5f00;
+  --dir-fg: #b30000;
   --info: #0b5a8a;
   --danger: #a4262c;
   --danger-hover: #c02e35;
@@ -69,6 +76,7 @@
   --btn-bg: #e2e2e2;
   --btn-hover: #d4d4d4;
   --btn-border: #b5b5b5;
+  --key-fg: #0b5a8a;
 }
 
 * {
@@ -174,7 +182,7 @@ body,
 
 .col-header {
   display: grid;
-  grid-template-columns: 28px 1fr 90px 130px;
+  grid-template-columns: 28px 1fr 64px 90px 130px;
   padding: 3px 8px;
   font-size: 11px;
   color: var(--fg-faint2);
@@ -255,7 +263,7 @@ body,
 
 .frow {
   display: grid;
-  grid-template-columns: 28px 1fr 90px 130px;
+  grid-template-columns: 28px 1fr 64px 90px 130px;
   align-items: center;
   height: 100%;
   padding: 0 8px;
@@ -272,18 +280,41 @@ body,
   color: var(--cursor-fg);
 }
 
+/* Inactive panel's selection bar: solid dark-red bar (WinM classic). */
 .frow.cursor-dim {
-  background: var(--bg3);
-  outline: 1px dashed var(--btn-border);
-  outline-offset: -1px;
+  background: var(--cursor-dim-bg);
+  color: var(--cursor-dim-fg);
+}
+
+.frow.is-dir .c-name {
+  color: var(--dir-fg);
 }
 
 .frow.selected .c-name {
   color: var(--sel-name);
 }
 
+.frow.cursor .c-name {
+  color: var(--cursor-fg);
+}
+
+.frow.cursor-dim .c-name {
+  color: var(--cursor-dim-fg);
+}
+
+.frow.cursor-dim .c-ext,
+.frow.cursor-dim .c-size,
+.frow.cursor-dim .c-date {
+  color: var(--cursor-dim-fg);
+  opacity: 0.8;
+}
+
 .frow.cursor.selected .c-name {
   color: var(--sel-name-cursor);
+}
+
+.frow.cursor-dim.selected .c-name {
+  color: var(--sel-name);
 }
 
 .frow .c-icon {
@@ -294,6 +325,18 @@ body,
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 8px;
+}
+
+.frow .c-ext,
+.col-header .c-ext {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg-faint2);
+}
+
+.frow.cursor .c-ext {
+  color: var(--cursor-fg-dim);
 }
 
 .frow.is-dir .c-name,
@@ -340,8 +383,17 @@ body,
   color: var(--fg-faint2);
 }
 
+.keybar span b {
+  color: var(--key-fg);
+  font-weight: 700;
+}
+
 .keybar span.done {
   background: var(--accent);
+  color: var(--on-accent);
+}
+
+.keybar span.done b {
   color: var(--on-accent);
 }
 

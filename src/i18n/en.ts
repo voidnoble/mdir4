@@ -56,6 +56,7 @@ export const en: Record<string, string> = {
   "keybar.settings": "F12 Settings",
 
   "panel.name": "Name",
+  "panel.ext": "Ext",
   "panel.size": "Size",
   "panel.date": "Modified",
   "panel.loading": "Loading…",
@@ -266,6 +267,7 @@ export const en: Record<string, string> = {
   "help.help": "This help",
   "help.settings": "Settings",
   "sort.byName": "Sort by name",
+  "sort.byExt": "Sort by extension",
   "sort.bySize": "Sort by size",
   "sort.byDate": "Sort by date",
   "panel.filter": "filter: {f}",

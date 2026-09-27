@@ -68,10 +68,15 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
     if (!e) return null;
     const isCursor = i === cursor;
     const isSelected = selected.has(e.path);
-    const nameColor = extColorFor(extColors, e.name, e.isDir);
+    // On the cursor bar (active or inactive) the row uses the bar's text color,
+    // so per-extension colors are suppressed there (WinM classic behavior).
+    const nameColor = isCursor ? undefined : extColorFor(extColors, e.name, e.isDir);
+    const dot = e.isDir ? -1 : e.name.lastIndexOf(".");
+    const baseName = dot > 0 ? e.name.slice(0, dot) : e.name;
+    const ext = dot > 0 ? e.name.slice(dot + 1) : "";
     return (
       <div
-        className={`frow${isCursor ? (active ? " cursor" : " cursor-dim") : ""}${isSelected ? " selected" : ""}`}
+        className={`frow${e.isDir ? " is-dir" : ""}${isCursor ? (active ? " cursor" : " cursor-dim") : ""}${isSelected ? " selected" : ""}`}
         onMouseDown={() => {
           onActivate();
           api.setCursor(i);
@@ -80,9 +85,10 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
       >
         <span className="c-icon">{e.isDir ? "📁" : fileIcon(e.name)}</span>
         <span className="c-name" title={e.path} style={nameColor ? { color: nameColor } : undefined}>
-          {e.name}
+          {baseName}
           {e.isSymlink ? " 🔗" : ""}
         </span>
+        <span className="c-ext">{ext}</span>
         <span className="c-size">{e.isDir ? "" : formatSize(e.size)}</span>
         <span className="c-date">{formatDate(e.modifiedMs)}</span>
       </div>
@@ -156,6 +162,14 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
         >
           {t("panel.name")}
           {state.sortKey === "name" ? (state.sortDir === "asc" ? " ▲" : " ▼") : ""}
+        </button>
+        <button
+          className={`c-ext sort-hdr${state.sortKey === "ext" ? " sorted" : ""}`}
+          onClick={() => api.setSort("ext", state.sortKey === "ext" && state.sortDir === "asc" ? "desc" : "asc")}
+          title={t("sort.byExt")}
+        >
+          {t("panel.ext")}
+          {state.sortKey === "ext" ? (state.sortDir === "asc" ? " ▲" : " ▼") : ""}
         </button>
         <button
           className={`c-size sort-hdr${state.sortKey === "size" ? " sorted" : ""}`}

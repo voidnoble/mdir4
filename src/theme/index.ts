@@ -66,6 +66,8 @@ export function parseCol(text: string): ParsedCol {
         vars["--bg4"] = shade(color, 6);
         vars["--row-hover"] = shade(color, 10);
         vars["--cursor-bg"] = shade(color, 28);
+        // inactive selection bar: a darker shade of the cursor color
+        vars["--cursor-dim-bg"] = shade(vars["--cursor-bg"], -110);
       }
       if (key === "ItemColorEnable" || key === "ExtColorEnable") {
         // flags; ext colors apply when the section is non-empty
@@ -100,8 +102,22 @@ export function applyCustomVars(vars: ThemeVars): void {
 }
 
 export function extColorFor(extColors: ExtColors | undefined, fileName: string, isDir: boolean): string | undefined {
-  if (!extColors || isDir) return undefined;
+  if (isDir) return undefined;
   const dot = fileName.lastIndexOf(".");
   if (dot < 0) return undefined;
-  return extColors[fileName.slice(dot + 1).toLowerCase()];
+  const ext = fileName.slice(dot + 1).toLowerCase();
+  return extColors?.[ext] ?? DEFAULT_EXT_COLORS[ext];
 }
+
+/** Built-in WinM-classic extension colors (used when no custom colors are set). */
+export const DEFAULT_EXT_COLORS: ExtColors = {
+  zip: "#ff00ff",
+  "7z": "#ff00ff",
+  rar: "#ff00ff",
+  tar: "#ff00ff",
+  gz: "#ff00ff",
+  bz2: "#ff00ff",
+  xz: "#ff00ff",
+  zst: "#ff00ff",
+  "001": "#ff00ff",
+};
