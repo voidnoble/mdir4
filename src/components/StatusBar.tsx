@@ -55,7 +55,6 @@ export default function StatusBar({ panel }: { panel: PanelApi }) {
   return (
     <div className="statusbar">
       <span className="sb-icon">ⓘ</span>
-      {state.searchBuf && <span className="sb-search">⌕ {state.searchBuf}</span>}
       <span className="sb-left">
         {t("status.counts", { d: dirs, f: files, b: num(bytes) })}
         {state.selected.size > 0 && ` · ${t("panel.selected", { n: state.selected.size })}`}

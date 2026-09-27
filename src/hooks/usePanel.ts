@@ -45,8 +45,10 @@ export interface PanelState {
   sortDir: SortDir;
   cursor: number;
   selected: Set<string>;
-  /** type-ahead search buffer (auto-clears after idle); shown in the status bar */
+  /** type-ahead search buffer (auto-clears after idle); shown at the path bar's right */
   searchBuf: string;
+  /** incremented on each successful type-ahead jump; drives the green match flash */
+  searchFlash: number;
   loading: boolean;
   error: string | null;
   canBack: boolean;
@@ -135,6 +137,7 @@ export function usePanel(initialPath: string): PanelApi {
     cursor: 0,
     selected: new Set(),
     searchBuf: "",
+    searchFlash: 0,
     loading: true,
     error: null,
     canBack: false,
@@ -368,11 +371,17 @@ export function usePanel(initialPath: string): PanelApi {
       const s = stateRef.current;
       if (s.entries.length === 0) return false;
       if (searchTimer.current) window.clearTimeout(searchTimer.current);
-      const buf = (s.searchBuf + ch).toLowerCase();
+      const prevBuf = s.searchBuf;
+      const buf = (prevBuf + ch).toLowerCase();
       // repeated same char (e.g. "bb") cycles through matches for that char
       const cycling = buf.length > 1 && buf.split("").every((c) => c === buf[0]);
       const needle = cycling ? buf[0] : buf;
-      const start = cycling ? s.cursor + 1 : 0;
+      // fresh keystroke matching the current item's first char: jump to the NEXT
+      // match (WinM: typing "w" again after a pause cycles through "w" items)
+      const cur = s.entries[s.cursor];
+      const freshCycle =
+        !cycling && !prevBuf && !!cur && cur.name.toLowerCase().startsWith(ch.toLowerCase());
+      const start = cycling || freshCycle ? s.cursor + 1 : 0;
       let idx = -1;
       for (let k = 0; k < s.entries.length; k++) {
         const i = (start + k) % s.entries.length;
@@ -386,7 +395,10 @@ export function usePanel(initialPath: string): PanelApi {
         setState((st) => (st.searchBuf ? { ...st, searchBuf: "" } : st));
       }, 1200);
       setState((st) => (st.searchBuf === buf ? st : { ...st, searchBuf: buf }));
-      if (idx >= 0) setCursor(idx);
+      if (idx >= 0) {
+        setCursor(idx);
+        setState((st) => ({ ...st, searchFlash: st.searchFlash + 1 }));
+      }
       return idx >= 0;
     },
     [setCursor],

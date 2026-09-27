@@ -196,9 +196,27 @@ body,
   font-size: 12px;
   color: var(--bar-fg);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pathbar-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* type-ahead search term box at the path bar's right end (WinM reference) */
+.search-box {
+  flex: none;
+  background: #00ff00;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 18px;
+  padding: 0 6px;
 }
 
 .pathbar:hover {
@@ -401,13 +419,6 @@ body,
   flex: none;
 }
 
-.statusbar .sb-search {
-  flex: none;
-  color: var(--key-fg);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 .statusbar .sb-left {
   white-space: nowrap;
   flex: none;
@@ -479,6 +490,18 @@ body,
 .frow.cursor-dim {
   background: var(--cursor-dim-bg);
   color: var(--cursor-dim-fg);
+}
+
+/* Type-ahead match flash: bright green bar (macmdir-type-ahead-search-02.png).
+ * Placed after the cursor rules so it wins on equal specificity. */
+.frow.search-hit,
+.frow.search-hit .c-icon,
+.frow.search-hit .c-name,
+.frow.search-hit .c-ext,
+.frow.search-hit .c-size,
+.frow.search-hit .c-date {
+  background: #00ff00;
+  color: #000;
 }
 
 .frow.is-dir .c-name {

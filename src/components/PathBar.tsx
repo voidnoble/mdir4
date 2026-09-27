@@ -1,6 +1,8 @@
 interface PathBarProps {
   path: string;
   filter: string;
+  /** type-ahead search buffer; shown in the green box at the bar's right end */
+  searchBuf: string;
   onOpen: () => void;
 }
 
@@ -9,7 +11,7 @@ interface PathBarProps {
  * `#f0f0f0` chrome, `path + separator + filter` (e.g. `C:\Downloads\*.*`).
  * Click opens the path dialog.
  */
-export default function PathBar({ path, filter, onOpen }: PathBarProps) {
+export default function PathBar({ path, filter, searchBuf, onOpen }: PathBarProps) {
   const sep = path.includes("\\") ? "\\" : "/";
   const text = `${path}${path.endsWith(sep) ? "" : sep}${filter || "*.*"}`;
 
@@ -29,7 +31,8 @@ export default function PathBar({ path, filter, onOpen }: PathBarProps) {
       onClick={onOpen}
       onKeyDown={openOnKey}
     >
-      {text}
+      <span className="pathbar-text">{text}</span>
+      {searchBuf && <span className="search-box">{searchBuf}</span>}
     </div>
   );
 }

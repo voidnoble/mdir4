@@ -33,6 +33,20 @@ export default function Panel({
   const { path, entries, cursor, selected, loading, error } = state;
   const [mkdirDraft, setMkdirDraft] = useState("");
   const mkdirInputRef = useRef<HTMLInputElement>(null);
+  // green "found" flash on the cursor row right after a type-ahead jump
+  // (per macmdir-type-ahead-search-02.png)
+  const [flashOn, setFlashOn] = useState(false);
+  const flashTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (state.searchFlash === 0) return;
+    setFlashOn(true);
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => setFlashOn(false), 800);
+    return () => {
+      if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    };
+  }, [state.searchFlash]);
 
   useEffect(() => {
     if (mkdirMode) {
@@ -59,6 +73,7 @@ export default function Panel({
     if (!e) return null;
     const isCursor = i === cursor;
     const isSelected = selected.has(e.path);
+    const isHit = isCursor && flashOn;
     // On the cursor bar (active or inactive) the row uses the bar's text color,
     // so per-extension colors are suppressed there (WinM classic behavior).
     const nameColor = isCursor ? undefined : extColorFor(extColors, e.name, e.isDir);
@@ -67,7 +82,7 @@ export default function Panel({
     const ext = dot > 0 ? e.name.slice(dot + 1) : "";
     return (
       <div
-        className={`frow${e.isDir ? " is-dir" : ""}${isCursor ? (active ? " cursor" : " cursor-dim") : ""}${isSelected ? " selected" : ""}`}
+        className={`frow${e.isDir ? " is-dir" : ""}${isCursor ? (active ? " cursor" : " cursor-dim") : ""}${isSelected ? " selected" : ""}${isHit ? " search-hit" : ""}`}
         onMouseDown={() => {
           onActivate();
           api.setCursor(i);

@@ -1183,6 +1183,7 @@ function App() {
           <PathBar
             path={activePanel.state.path}
             filter={activePanel.state.filter}
+            searchBuf={activePanel.state.searchBuf}
             onOpen={() => setDialog({ kind: "path" })}
           />
         )}
