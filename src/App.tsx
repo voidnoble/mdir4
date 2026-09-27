@@ -880,6 +880,60 @@ function App() {
 
   const activePanel = active === 0 ? left : right;
 
+  // Keybar items: evenly distributed, mouse click invokes the same action as the shortcut.
+  const keybarItems: { key: string; run: () => void }[] = [
+    { key: "keybar.help", run: () => setDialog({ kind: "help" }) },
+    { key: "keybar.refresh", run: () => activePanel.refresh() },
+    { key: "keybar.copy", run: () => openCopy("copy") },
+    { key: "keybar.rename", run: () => openRename() },
+    { key: "keybar.mkdir", run: () => activePanel.setMkdirMode(true) },
+    { key: "keybar.delete", run: () => openDelete() },
+    { key: "keybar.switch", run: () => setActive((a) => (a === 0 ? 1 : 0)) },
+    { key: "keybar.select", run: () => activePanel.toggleSelect() },
+    {
+      key: "keybar.archive",
+      run: () => {
+        const ce = cursorEntry();
+        if (ce && !ce.isDir && ce.name.toLowerCase().endsWith(".zip")) openExtract(ce.path);
+        else openZip();
+      },
+    },
+    { key: "keybar.split", run: () => openSplitCombine() },
+    { key: "keybar.open", run: () => void openWithDefault() },
+    { key: "keybar.filter", run: () => setDialog({ kind: "filter" }) },
+    { key: "keybar.flist", run: () => setDialog({ kind: "fileList" }) },
+    { key: "keybar.mcd", run: () => openMcd() },
+    { key: "keybar.qcd", run: () => openQcd() },
+    { key: "keybar.props", run: () => openProps() },
+    { key: "keybar.settings", run: () => openSettings() },
+  ];
+
+  const kbItem = (it: { key: string; run: () => void }) => {
+    const s = t(it.key);
+    const i = s.indexOf(" ");
+    return (
+      <button
+        key={it.key}
+        className="kb-item"
+        title={s}
+        tabIndex={-1}
+        onClick={(e) => {
+          it.run();
+          e.currentTarget.blur();
+        }}
+      >
+        {i > 0 ? (
+          <>
+            <b>{s.slice(0, i)}</b>
+            {s.slice(i)}
+          </>
+        ) : (
+          s
+        )}
+      </button>
+    );
+  };
+
   // Toolbar actions (same handlers as keyboard shortcuts).
   const tools: ToolDef[] = [
     { id: "refresh", icon: <RefreshIcon />, title: t("keybar.refresh"), onClick: () => activePanel.refresh() },
@@ -903,24 +957,6 @@ function App() {
     { id: "settings", icon: <SettingsIcon />, title: t("keybar.settings"), onClick: () => openSettings() },
     { id: "help", icon: <HelpIcon />, title: t("keybar.help"), onClick: () => setDialog({ kind: "help" }) },
   ];
-
-  // Keybar item: highlight the leading shortcut key (e.g. "F2" in "F2 새로고침").
-  const kb = (key: string) => {
-    const s = t(key);
-    const i = s.indexOf(" ");
-    return (
-      <span className="done" key={key}>
-        {i > 0 ? (
-          <>
-            <b>{s.slice(0, i)}</b>
-            {s.slice(i)}
-          </>
-        ) : (
-          s
-        )}
-      </span>
-    );
-  };
 
   return (
     <div className="app">
@@ -954,25 +990,7 @@ function App() {
       </main>
       <footer className="app-footer">
         <StatusBar panel={activePanel} />
-        <div className="keybar">
-          {kb("keybar.help")}
-          {kb("keybar.refresh")}
-          {kb("keybar.copy")}
-          {kb("keybar.rename")}
-          {kb("keybar.mkdir")}
-          {kb("keybar.delete")}
-          {kb("keybar.switch")}
-          {kb("keybar.select")}
-          {kb("keybar.archive")}
-          {kb("keybar.split")}
-          {kb("keybar.open")}
-          {kb("keybar.filter")}
-          {kb("keybar.flist")}
-          {kb("keybar.mcd")}
-          {kb("keybar.qcd")}
-          {kb("keybar.props")}
-          {kb("keybar.settings")}
-        </div>
+        <div className="keybar">{keybarItems.map(kbItem)}</div>
       </footer>
 
       {d?.kind === "copy" && (

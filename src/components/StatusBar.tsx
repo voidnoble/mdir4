@@ -10,6 +10,12 @@ function volumeLabel(path: string): string {
   return "/";
 }
 
+function baseNameOf(path: string): string {
+  const p = path.replace(/[\\/]+$/, "");
+  const i = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"));
+  return i >= 0 ? p.slice(i + 1) : p;
+}
+
 const num = (n: number) => n.toLocaleString("en-US");
 
 /** App-level status bar (WinM classic): active panel stats + drive space + cursor info. */
@@ -48,21 +54,25 @@ export default function StatusBar({ panel }: { panel: PanelApi }) {
 
   return (
     <div className="statusbar">
-      <span className="seg">
+      <span className="sb-icon">ⓘ</span>
+      <span className="sb-left">
         {t("status.counts", { d: dirs, f: files, b: num(bytes) })}
         {state.selected.size > 0 && ` · ${t("panel.selected", { n: state.selected.size })}`}
         {state.filter && ` · ${t("panel.filter", { f: state.filter })}`}
       </span>
-      <span className="seg grow">
-        {disk && pct !== null
-          ? t("status.driveFree", {
+      <span className="sb-mid">
+        {disk && pct !== null && (
+          <>
+            {t("status.driveFree", {
               v: volumeLabel(state.path),
               s: num(disk.free),
               p: pct,
-            })
-          : ""}
+            })}{" "}
+            <span className="sb-dir">{baseNameOf(state.path)}</span>
+          </>
+        )}
       </span>
-      <span className="seg right">
+      <span className="sb-right">
         {cursorEntry
           ? `${cursorEntry.name}${cursorEntry.isDir ? "" : ` · ${formatSize(cursorEntry.size)}`} · ${formatDate(cursorEntry.modifiedMs)}`
           : ""}

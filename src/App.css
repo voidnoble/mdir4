@@ -304,28 +304,41 @@ body,
 
 .statusbar {
   display: flex;
-  gap: 3px;
-  padding: 3px 4px;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
   font-size: 12px;
+  color: var(--bar-fg);
 }
 
-.statusbar .seg {
-  border-top: 1px solid var(--bar-edge-lo);
-  border-left: 1px solid var(--bar-edge-lo);
-  border-bottom: 1px solid var(--bar-edge-hi);
-  border-right: 1px solid var(--bar-edge-hi);
-  padding: 2px 8px;
+.statusbar .sb-icon {
+  color: var(--key-fg);
+  flex: none;
+}
+
+.statusbar .sb-left {
+  white-space: nowrap;
+  flex: none;
+}
+
+.statusbar .sb-mid {
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.statusbar .seg.grow {
-  flex: 1;
+.statusbar .sb-dir {
+  color: var(--key-fg);
 }
 
-.statusbar .seg.right {
+.statusbar .sb-right {
   margin-left: auto;
+  flex: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   max-width: 40%;
 }
 
@@ -458,34 +471,39 @@ body,
 
 .keybar {
   display: flex;
-  gap: 2px;
-  padding: 3px 4px;
+  padding: 2px;
   background: transparent;
   border-top: 1px solid var(--bar-edge-lo);
-  overflow-x: auto;
+  overflow: hidden;
 }
 
-.keybar span {
-  padding: 2px 6px;
+.kb-item {
+  flex: 1 1 0;
+  min-width: 0;
   background: transparent;
-  border-radius: 0;
-  white-space: nowrap;
+  border: none;
   color: var(--bar-fg);
+  font-family: inherit;
   font-size: 12px;
+  text-align: left;
+  padding: 2px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
 }
 
-.keybar span b {
+.kb-item b {
   color: var(--key-fg);
   font-weight: 700;
 }
 
-.keybar span.done {
-  background: transparent;
-  color: var(--bar-fg);
+.kb-item:hover {
+  background: rgba(255, 255, 255, 0.45);
 }
 
-.keybar span.done b {
-  color: var(--key-fg);
+.kb-item:active {
+  background: rgba(0, 0, 0, 0.08);
 }
 
 /* ---------- dialogs ---------- */
