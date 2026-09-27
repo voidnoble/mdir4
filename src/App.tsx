@@ -18,6 +18,7 @@ import {
 import PathBar from "./components/PathBar";
 import StatusBar from "./components/StatusBar";
 import PathDialog from "./dialogs/PathDialog";
+import DriveDialog from "./dialogs/DriveDialog";
 import BatchRenameDialog from "./dialogs/BatchRenameDialog";
 import CombineDialog from "./dialogs/CombineDialog";
 import CopyDialog from "./dialogs/CopyDialog";
@@ -74,6 +75,7 @@ type DialogState =
   | { kind: "settings" }
   | { kind: "mcd" }
   | { kind: "qcd" }
+  | { kind: "drive" }
   | { kind: "path" }
   | { kind: "split"; path: string; dest: string }
   | { kind: "combine"; firstPart: string; dest: string }
@@ -378,7 +380,6 @@ function App() {
   /** ---- MCD / QCD ---- */
 
   const openMcd = useCallback(() => setDialog({ kind: "mcd" }), []);
-
   const selectMcd = useCallback((path: string) => {
     const { left, right, active } = panelsRef.current;
     (active === 0 ? left : right).load(path);
@@ -386,6 +387,14 @@ function App() {
   }, []);
 
   const openQcd = useCallback(() => setDialog({ kind: "qcd" }), []);
+
+  const openDrive = useCallback(() => setDialog({ kind: "drive" }), []);
+
+  const selectDrive = useCallback((path: string) => {
+    const { left, right, active } = panelsRef.current;
+    (active === 0 ? left : right).load(path);
+    setDialog(null);
+  }, []);
 
   const jumpQcd = useCallback(
     (path: string) => {
@@ -763,6 +772,14 @@ function App() {
           e.preventDefault();
           panel.refresh();
           return;
+        case "F3":
+          e.preventDefault();
+          openDrive();
+          return;
+        case "F4":
+          e.preventDefault();
+          openCopy("move");
+          return;
         case "F5":
           e.preventDefault();
           openCopy("copy");
@@ -778,6 +795,10 @@ function App() {
         case "F8":
           e.preventDefault();
           openDelete();
+          return;
+        case "F9":
+          e.preventDefault();
+          openProps();
           return;
         case "F10":
           e.preventDefault();
@@ -863,6 +884,7 @@ function App() {
       openSettings,
       openMcd,
       openQcd,
+      openDrive,
       openSplitCombine,
       openBatchRename,
       openProps,
@@ -881,31 +903,16 @@ function App() {
   const activePanel = active === 0 ? left : right;
 
   // Keybar items: evenly distributed, mouse click invokes the same action as the shortcut.
+  // Mirrors the WinM reference keybar: F2..F9.
   const keybarItems: { key: string; run: () => void }[] = [
-    { key: "keybar.help", run: () => setDialog({ kind: "help" }) },
     { key: "keybar.refresh", run: () => activePanel.refresh() },
+    { key: "keybar.drive", run: () => openDrive() },
+    { key: "keybar.move", run: () => openCopy("move") },
     { key: "keybar.copy", run: () => openCopy("copy") },
     { key: "keybar.rename", run: () => openRename() },
     { key: "keybar.mkdir", run: () => activePanel.setMkdirMode(true) },
     { key: "keybar.delete", run: () => openDelete() },
-    { key: "keybar.switch", run: () => setActive((a) => (a === 0 ? 1 : 0)) },
-    { key: "keybar.select", run: () => activePanel.toggleSelect() },
-    {
-      key: "keybar.archive",
-      run: () => {
-        const ce = cursorEntry();
-        if (ce && !ce.isDir && ce.name.toLowerCase().endsWith(".zip")) openExtract(ce.path);
-        else openZip();
-      },
-    },
-    { key: "keybar.split", run: () => openSplitCombine() },
-    { key: "keybar.open", run: () => void openWithDefault() },
-    { key: "keybar.filter", run: () => setDialog({ kind: "filter" }) },
-    { key: "keybar.flist", run: () => setDialog({ kind: "fileList" }) },
-    { key: "keybar.mcd", run: () => openMcd() },
-    { key: "keybar.qcd", run: () => openQcd() },
     { key: "keybar.props", run: () => openProps() },
-    { key: "keybar.settings", run: () => openSettings() },
   ];
 
   const kbItem = (it: { key: string; run: () => void }) => {
@@ -1054,6 +1061,9 @@ function App() {
         />
       )}
       {d?.kind === "mcd" && <McdDialog onClose={() => setDialog(null)} onSelect={selectMcd} />}
+      {d?.kind === "drive" && (
+        <DriveDialog onClose={() => setDialog(null)} onSelect={selectDrive} />
+      )}
       {d?.kind === "path" && (
         <PathDialog
           initial={activePanel.state.path}

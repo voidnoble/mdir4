@@ -45,7 +45,8 @@ export const ko: Record<string, string> = {
 
   "keybar.refresh": "F2 새로고침",
   "keybar.copy": "F5 복사",
-  "keybar.move": "M 이동",
+  "keybar.move": "F4 이동",
+  "keybar.drive": "F3 드라이브",
   "keybar.rename": "F6 이름바꾸기",
   "keybar.mkdir": "F7 폴더만들기",
   "keybar.delete": "F8 삭제",
@@ -164,6 +165,7 @@ export const ko: Record<string, string> = {
   "settings.loaded": "불러옴: {name}",
 
   "mcd.title": "MCD - 디렉토리 트리",
+  "drive.title": "드라이브 선택",
   "mcd.loading": "불러오는 중…",
   "mcd.select": "이동",
   "qcd.title": "QCD - 즐겨찾기",
@@ -290,7 +292,7 @@ export const ko: Record<string, string> = {
   "dlg.delete": "삭제",
   "dlg.apply": "적용",
   "keybar.help": "F1 도움말",
-  "keybar.props": "속성",
+  "keybar.props": "F9 등록정보",
   "keybar.open": "O 열기",
   "keybar.filter": "F 필터",
   "keybar.flist": "L 목록",

@@ -45,7 +45,8 @@ export const en: Record<string, string> = {
 
   "keybar.refresh": "F2 Refresh",
   "keybar.copy": "F5 Copy",
-  "keybar.move": "M Move",
+  "keybar.move": "F4 Move",
+  "keybar.drive": "F3 Drive",
   "keybar.rename": "F6 Rename",
   "keybar.mkdir": "F7 Mkdir",
   "keybar.delete": "F8 Delete",
@@ -164,6 +165,7 @@ export const en: Record<string, string> = {
   "settings.loaded": "Loaded: {name}",
 
   "mcd.title": "MCD - Directory Tree",
+  "drive.title": "Select Drive",
   "mcd.loading": "Loading…",
   "mcd.select": "Go",
   "qcd.title": "QCD - Favorites",
@@ -290,7 +292,7 @@ export const en: Record<string, string> = {
   "dlg.delete": "Delete",
   "dlg.apply": "Apply",
   "keybar.help": "F1 Help",
-  "keybar.props": "Props",
+  "keybar.props": "F9 Properties",
   "keybar.open": "O Open",
   "keybar.filter": "F Filter",
   "keybar.flist": "L List",
