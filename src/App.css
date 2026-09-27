@@ -573,11 +573,9 @@ body,
   color: var(--sel-name);
 }
 
-/* Selection marker (WinM): sideways triangle in its own column at the row's
-   very front, left of the icon; always the same color as the selected name. */
-.frow.selected {
-  grid-template-columns: 20px 28px 1fr 64px 90px 130px;
-}
+/* Selection marker (WinM): when a row is selected its icon is replaced by a
+   sideways triangle, always the same color as the selected name; deselecting
+   restores the original icon. */
 .frow .sel-mark {
   text-align: center;
 }
