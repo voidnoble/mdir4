@@ -71,7 +71,7 @@ export const en: Record<string, string> = {
   "panel.retry": "Retry",
   "panel.empty": "Empty",
   "panel.items": "{n} items",
-  "panel.selected": "{n} selected",
+  "panel.selected": "▶ {n} objects ({b} bytes)",
   "panel.newFolder": "📁 New folder:",
   "panel.folderNamePh": "Folder name",
   "panel.pathEditHint": "Double-click: edit path",

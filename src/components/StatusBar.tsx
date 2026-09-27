@@ -49,6 +49,14 @@ export default function StatusBar({ panel, showDrive = true, kbMb = false }: { p
     }
   }
 
+  // selected objects info (WinM): count + total size of the selection
+  let selBytes = 0;
+  if (state.selected.size > 0) {
+    for (const e of state.entries) {
+      if (state.selected.has(e.path)) selBytes += e.size;
+    }
+  }
+
   const cursorEntry = state.entries[state.cursor];
   const pct = disk && disk.total > 0 ? ((disk.free / disk.total) * 100).toFixed(1) : null;
 
@@ -59,7 +67,8 @@ export default function StatusBar({ panel, showDrive = true, kbMb = false }: { p
         {kbMb
           ? t("status.countsKbMb", { d: dirs, f: files, b: formatSize(bytes) })
           : t("status.counts", { d: dirs, f: files, b: num(bytes) })}
-        {state.selected.size > 0 && ` · ${t("panel.selected", { n: state.selected.size })}`}
+        {state.selected.size > 0 &&
+          ` · ${t("panel.selected", { n: state.selected.size, b: num(selBytes) })}`}
         {state.filter && ` · ${t("panel.filter", { f: state.filter })}`}
       </span>
       <span className="sb-mid">

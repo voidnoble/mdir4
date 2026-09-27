@@ -71,7 +71,7 @@ export const ko: Record<string, string> = {
   "panel.retry": "다시 시도",
   "panel.empty": "비어 있음",
   "panel.items": "{n}개 항목",
-  "panel.selected": "{n}개 선택",
+  "panel.selected": "▶ {n}개체 ({b} 바이트)",
   "panel.newFolder": "📁 새 폴더:",
   "panel.folderNamePh": "폴더 이름",
   "panel.pathEditHint": "더블클릭: 경로 직접 입력",

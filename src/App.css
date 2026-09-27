@@ -566,6 +566,12 @@ body,
   color: var(--sel-name);
 }
 
+/* Selection marker (WinM): sideways triangle in front of the selected name,
+   always the same color as the name text (inherits from .c-name). */
+.frow .sel-mark {
+  margin-right: 4px;
+}
+
 .frow.cursor .c-name {
   color: var(--cursor-fg);
 }

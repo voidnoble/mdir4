@@ -136,6 +136,7 @@ export default function Panel({
       >
         <span className="c-icon">{e.isDir ? "📁" : fileIcon(e.name)}</span>
         <span className="c-name" title={e.path} style={nameColor ? { color: nameColor } : undefined}>
+          {isSelected && <span className="sel-mark">▶</span>}
           {baseName}
           {e.isSymlink ? " 🔗" : ""}
         </span>
