@@ -45,6 +45,8 @@ export interface PanelState {
   sortDir: SortDir;
   cursor: number;
   selected: Set<string>;
+  /** type-ahead search buffer (auto-clears after idle); shown in the status bar */
+  searchBuf: string;
   loading: boolean;
   error: string | null;
   canBack: boolean;
@@ -75,6 +77,12 @@ export interface PanelApi {
   setShowHidden: (b: boolean) => void;
   setFilter: (f: string) => void;
   setSort: (key: SortKey, dir: SortDir) => void;
+  /**
+   * Type-ahead search: append a char to the buffer and jump the cursor to the
+   * first entry whose name starts with it. Typing the same char repeatedly
+   * cycles through matches. Returns true when a match was found.
+   */
+  typeAhead: (ch: string) => boolean;
   /** selected paths, or the cursor item when nothing is selected */
   getTargets: () => string[];
 }
@@ -126,6 +134,7 @@ export function usePanel(initialPath: string): PanelApi {
     sortDir: "asc",
     cursor: 0,
     selected: new Set(),
+    searchBuf: "",
     loading: true,
     error: null,
     canBack: false,
@@ -136,6 +145,8 @@ export function usePanel(initialPath: string): PanelApi {
   stateRef.current = state;
   const loadId = useRef(0);
   const listRef = useRef<VirtualListHandle | null>(null);
+  // type-ahead buffer expiry timer
+  const searchTimer = useRef<number | null>(null);
   // navigation history (not in PanelState to keep renders cheap; canBack/canFwd mirror it)
   const histRef = useRef<{ back: string[]; fwd: string[] }>({ back: [], fwd: [] });
 
@@ -157,7 +168,11 @@ export function usePanel(initialPath: string): PanelApi {
 
   const loadAt = useCallback((path: string) => {
     const id = ++loadId.current;
-    setState((s) => ({ ...s, loading: true, error: null }));
+    if (searchTimer.current) {
+      window.clearTimeout(searchTimer.current);
+      searchTimer.current = null;
+    }
+    setState((s) => ({ ...s, loading: true, error: null, searchBuf: "" }));
     fsList(path)
       .then((allEntries) => {
         if (loadId.current !== id) return;
@@ -348,6 +363,35 @@ export function usePanel(initialPath: string): PanelApi {
     return e ? [e.path] : [];
   }, []);
 
+  const typeAhead = useCallback(
+    (ch: string): boolean => {
+      const s = stateRef.current;
+      if (s.entries.length === 0) return false;
+      if (searchTimer.current) window.clearTimeout(searchTimer.current);
+      const buf = (s.searchBuf + ch).toLowerCase();
+      // repeated same char (e.g. "bb") cycles through matches for that char
+      const cycling = buf.length > 1 && buf.split("").every((c) => c === buf[0]);
+      const needle = cycling ? buf[0] : buf;
+      const start = cycling ? s.cursor + 1 : 0;
+      let idx = -1;
+      for (let k = 0; k < s.entries.length; k++) {
+        const i = (start + k) % s.entries.length;
+        if (s.entries[i].name.toLowerCase().startsWith(needle)) {
+          idx = i;
+          break;
+        }
+      }
+      searchTimer.current = window.setTimeout(() => {
+        searchTimer.current = null;
+        setState((st) => (st.searchBuf ? { ...st, searchBuf: "" } : st));
+      }, 1200);
+      setState((st) => (st.searchBuf === buf ? st : { ...st, searchBuf: buf }));
+      if (idx >= 0) setCursor(idx);
+      return idx >= 0;
+    },
+    [setCursor],
+  );
+
   return {
     state,
     listRef,
@@ -372,6 +416,7 @@ export function usePanel(initialPath: string): PanelApi {
     setShowHidden,
     setFilter,
     setSort,
+    typeAhead,
     getTargets,
   };
 }

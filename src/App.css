@@ -316,6 +316,13 @@ body,
   flex: none;
 }
 
+.statusbar .sb-search {
+  flex: none;
+  color: var(--key-fg);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .statusbar .sb-left {
   white-space: nowrap;
   flex: none;

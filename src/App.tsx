@@ -870,7 +870,10 @@ function App() {
             return;
           }
           default:
-            break;
+            // type-ahead search: jump to the first entry starting with the
+            // typed text (single-letter hotkeys above take precedence)
+            panel.typeAhead(e.key);
+            return;
         }
       }
     },
