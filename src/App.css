@@ -191,27 +191,45 @@ body,
 }
 
 .pathbar {
-  padding: 0 4px 4px;
+  padding: 1px 2px 3px;
 }
 
 .path-field {
+  display: flex;
+  align-items: stretch;
   background: var(--field-bg);
   color: #000;
-  border-top: 2px solid var(--bar-edge-lo);
-  border-left: 2px solid var(--bar-edge-lo);
-  border-bottom: 2px solid var(--bar-edge-hi);
-  border-right: 2px solid var(--bar-edge-hi);
-  padding: 3px 6px;
+  border: 1px solid;
+  border-color: var(--bar-edge-lo) var(--bar-edge-hi) var(--bar-edge-hi) var(--bar-edge-lo);
   font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 20px;
+  height: 22px;
   cursor: pointer;
 }
 
 .path-field:hover {
   outline: 1px dotted #000;
   outline-offset: -4px;
+}
+
+.path-text {
+  flex: 1;
+  padding: 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.path-drop {
+  flex: none;
+  width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: #000;
+  background: var(--bar-bg);
+  border-left: 1px solid var(--bar-edge-lo);
 }
 
 /* inline new-folder input at the top of the panel */

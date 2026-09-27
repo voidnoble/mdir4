@@ -926,7 +926,11 @@ function App() {
     <div className="app">
       <header className="app-header">
         <Toolbar tools={tools} />
-        <PathBar path={activePanel.state.path} onOpen={() => setDialog({ kind: "path" })} />
+        <PathBar
+          path={activePanel.state.path}
+          filter={activePanel.state.filter}
+          onOpen={() => setDialog({ kind: "path" })}
+        />
       </header>
       <main className="panes">
         {ready && (
