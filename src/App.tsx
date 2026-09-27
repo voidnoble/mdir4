@@ -23,7 +23,8 @@ import OpenWithDialog, { extOf } from "./dialogs/OpenWithDialog";
 import PropsDialog from "./dialogs/PropsDialog";
 import SelectDialog from "./dialogs/SelectDialog";
 import { usePanel } from "./hooks/usePanel";
-import { setLang, useT } from "./i18n";
+import { getLang, setLang, useT } from "./i18n";
+import { buildAppMenu, type AppMenuActions } from "./lib/appMenu";
 import type { AppConfig, ExtAssoc, QcdEntry } from "./lib/config";
 import { defaultConfig, loadConfig, saveConfig } from "./lib/config";
 import type { OpSummary, OverwritePolicy } from "./lib/fs";
@@ -507,6 +508,99 @@ function App() {
     [],
   );
 
+  /** ---- native app menu (macOS: system menu bar) ---- */
+
+  // Always-fresh action table; the native menu dispatches through this ref
+  // so menu item handlers never capture stale closures.
+  const menuActionsRef = useRef<AppMenuActions | null>(null);
+  menuActionsRef.current = {
+    copy: () => openCopy("copy"),
+    move: () => openCopy("move"),
+    del: () => openDelete(),
+    rename: () => openRename(),
+    mkdir: () => {
+      const { left, right, active } = panelsRef.current;
+      (active === 0 ? left : right).setMkdirMode(true);
+    },
+    openWith: () => void openWithDefault(),
+    props: () => openProps(),
+    selectAll: () => {
+      const { left, right, active } = panelsRef.current;
+      (active === 0 ? left : right).selectAll();
+    },
+    invertSel: () => {
+      const { left, right, active } = panelsRef.current;
+      (active === 0 ? left : right).invertSelection();
+    },
+    selPattern: (select: boolean) => setDialog({ kind: "select", select }),
+    mcd: () => openMcd(),
+    qcd: () => openQcd(),
+    back: () => {
+      const { left, right, active } = panelsRef.current;
+      (active === 0 ? left : right).goBack();
+    },
+    forward: () => {
+      const { left, right, active } = panelsRef.current;
+      (active === 0 ? left : right).goForward();
+    },
+    refresh: () => {
+      const { left, right, active } = panelsRef.current;
+      (active === 0 ? left : right).refresh();
+    },
+    zip: () => openZip(),
+    unzip: () => {
+      const ce = cursorEntry();
+      if (ce && !ce.isDir && ce.name.toLowerCase().endsWith(".zip")) openExtract(ce.path);
+    },
+    zipview: () => openZipView(),
+    split: () => openSplitCombine(),
+    filter: () => setDialog({ kind: "filter" }),
+    toggleHidden: () => {
+      const { left, right, active } = panelsRef.current;
+      (active === 0 ? left : right).toggleHidden();
+    },
+    fileList: () => setDialog({ kind: "fileList" }),
+    batchRename: () => openBatchRename(),
+    settings: () => openSettings(),
+    help: () => setDialog({ kind: "help" }),
+  };
+
+  // (Re)build the native menu on mount and whenever the UI language changes.
+  const uiLang = getLang();
+  useEffect(() => {
+    const via = (fn: (m: AppMenuActions) => void) => () => {
+      const m = menuActionsRef.current;
+      if (m) fn(m);
+    };
+    void buildAppMenu({
+      copy: via((m) => m.copy()),
+      move: via((m) => m.move()),
+      del: via((m) => m.del()),
+      rename: via((m) => m.rename()),
+      mkdir: via((m) => m.mkdir()),
+      openWith: via((m) => m.openWith()),
+      props: via((m) => m.props()),
+      selectAll: via((m) => m.selectAll()),
+      invertSel: via((m) => m.invertSel()),
+      selPattern: (select: boolean) => via((m) => m.selPattern(select))(),
+      mcd: via((m) => m.mcd()),
+      qcd: via((m) => m.qcd()),
+      back: via((m) => m.back()),
+      forward: via((m) => m.forward()),
+      refresh: via((m) => m.refresh()),
+      zip: via((m) => m.zip()),
+      unzip: via((m) => m.unzip()),
+      zipview: via((m) => m.zipview()),
+      split: via((m) => m.split()),
+      filter: via((m) => m.filter()),
+      toggleHidden: via((m) => m.toggleHidden()),
+      fileList: via((m) => m.fileList()),
+      batchRename: via((m) => m.batchRename()),
+      settings: via((m) => m.settings()),
+      help: via((m) => m.help()),
+    });
+  }, [uiLang]);
+
   /** ---- keyboard ---- */
 
   const handleKey = useCallback(
@@ -768,18 +862,6 @@ function App() {
 
   return (
     <div className="app">
-      <header className="menubar">
-        <span className="app-title">Mdir4</span>
-        <nav>
-          <span>{t("menu.file")}</span>
-          <span>{t("menu.edit")}</span>
-          <span>{t("menu.path")}</span>
-          <span>{t("menu.archive")}</span>
-          <span>{t("menu.view")}</span>
-          <span>{t("menu.tools")}</span>
-          <span>{t("menu.help")}</span>
-        </nav>
-      </header>
       <main className="panes">
         {ready && (
           <>

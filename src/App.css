@@ -90,35 +90,6 @@ body,
   overflow: hidden;
 }
 
-.menubar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background: var(--bg3);
-  border-bottom: 1px solid var(--border);
-}
-
-.app-title {
-  font-weight: 700;
-  margin-right: 12px;
-}
-
-.menubar nav {
-  display: flex;
-  gap: 2px;
-}
-
-.menubar nav span {
-  padding: 3px 8px;
-  border-radius: 4px;
-  cursor: default;
-}
-
-.menubar nav span:hover {
-  background: var(--border);
-}
-
 .panes {
   flex: 1;
   display: flex;
