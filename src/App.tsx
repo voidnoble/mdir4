@@ -1007,10 +1007,14 @@ function App() {
           e.preventDefault();
           {
             const ce = cursorEntry();
-            if (ce && !ce.isDir && ce.name.toLowerCase().endsWith(".zip")) {
-              openZipView();
-            } else {
-              panel.enterAtCursor();
+            if (ce) {
+              if (ce.isDir) {
+                panel.enterAtCursor(); // 폴더/.. : 하위 디렉토리로 이동
+              } else if (ce.name.toLowerCase().endsWith(".zip")) {
+                openZipView(); // 압축파일: 내부 보기
+              } else {
+                void openWithDefault(); // 파일: 연결 프로그램 → OS 기본 앱으로 열기
+              }
             }
           }
           return;

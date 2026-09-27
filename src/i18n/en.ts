@@ -250,7 +250,7 @@ export const en: Record<string, string> = {
   "help.path": "Path",
   "help.app": "App",
   "help.move": "Move cursor",
-  "help.enter": "Open folder / view archive",
+  "help.enter": "Open folder / run file / view archive",
   "help.parent": "Parent folder",
   "help.switch": "Switch panel",
   "help.histback": "Back / forward",

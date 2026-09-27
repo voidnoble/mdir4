@@ -250,7 +250,7 @@ export const ko: Record<string, string> = {
   "help.path": "경로",
   "help.app": "앱",
   "help.move": "커서 이동",
-  "help.enter": "폴더 열기 / 압축파일 보기",
+  "help.enter": "폴더 열기 / 파일 실행 / 압축파일 보기",
   "help.parent": "상위 폴더",
   "help.switch": "패널 전환",
   "help.histback": "뒤로 / 앞으로",
