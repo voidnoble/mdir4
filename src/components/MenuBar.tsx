@@ -65,6 +65,24 @@ export default function MenuBar({ menus, onAction }: MenuBarProps) {
 
   // capture-phase keyboard: runs before the app's own key handler
   useEffect(() => {
+    // 0-depth menu accelerator: Alt+<mnemonic> (e.g. Alt+F opens 파일 and shows
+    // its 1-depth items). Match by typed char, with a physical-key fallback
+    // because macOS Option+letter yields composed chars (e.g. Ï for ⌥F).
+    const topMnemonicIndex = (e: KeyboardEvent): number => {
+      if (!e.altKey || e.ctrlKey || e.metaKey) return -1;
+      const ms = menusRef.current;
+      if (e.key.length === 1) {
+        const k = e.key.toLowerCase();
+        const i = ms.findIndex((m) => m.mnemonic.toLowerCase() === k);
+        if (i >= 0) return i;
+      }
+      for (let i = 0; i < ms.length; i++) {
+        const mn = ms[i].mnemonic.toUpperCase();
+        if (/^[A-Z]$/.test(mn) && e.code === `Key${mn}`) return i;
+      }
+      return -1;
+    };
+
     const onKey = (e: KeyboardEvent) => {
       const tg = e.target as HTMLElement | null;
       if (tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.isContentEditable)) return;
@@ -72,17 +90,23 @@ export default function MenuBar({ menus, onAction }: MenuBarProps) {
       const ms = menusRef.current;
       const single = e.key.length === 1 ? e.key.toLowerCase() : "";
 
-      // Alt+<top-level mnemonic> toggles a menu
-      if (o === null) {
-        if (e.altKey && !e.ctrlKey && !e.metaKey && single) {
-          const i = ms.findIndex((m) => m.mnemonic.toLowerCase() === single);
-          if (i >= 0) {
-            e.preventDefault();
-            e.stopPropagation();
-            setOpen(i);
-            setPath([]);
-          }
-        }
+      // Alt+F / Alt+I / ... : open that 0-depth menu (or switch to it while open),
+      // displaying its 1-depth items
+      const mi = topMnemonicIndex(e);
+      if (mi >= 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        setOpen(mi);
+        setPath([]);
+        return;
+      }
+
+      if (o === null) return; // closed: everything else belongs to the app
+
+      // menu open + another Alt+letter (an app action accelerator like Alt+C):
+      // close the menu and let it fall through to the app handler
+      if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
+        close();
         return;
       }
 
@@ -156,7 +180,6 @@ export default function MenuBar({ menus, onAction }: MenuBarProps) {
         }
         return;
       }
-      // any other Alt+letter while open: let it fall through to app actions
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
@@ -216,6 +239,7 @@ export default function MenuBar({ menus, onAction }: MenuBarProps) {
             role="menuitem"
             aria-haspopup="true"
             aria-expanded={open === i}
+            title={`Alt+${m.mnemonic.toUpperCase()}`}
             onClick={() => (open === i ? close() : (setOpen(i), setPath([])))}
             onMouseEnter={() => {
               if (open !== null && open !== i) {
