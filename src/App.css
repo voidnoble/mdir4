@@ -22,8 +22,8 @@
   --cursor-fg-dim: #ffc9c9;
   --cursor-dim-bg: #7a0000;
   --cursor-dim-fg: #ffffff;
-  --sel-name: #ffff00;
-  --sel-name-cursor: #ffff00;
+  --sel-name: #f061ef;
+  --sel-name-cursor: #f061ef;
   --dir-fg: #ff0000;
   --hidden-fg: #808080;
   --ro-fg: #00c000;
@@ -73,8 +73,8 @@
   --cursor-fg-dim: #1a4a6a;
   --cursor-dim-bg: #e8b4b4;
   --cursor-dim-fg: #1e1e1e;
-  --sel-name: #8a6d00;
-  --sel-name-cursor: #7a5f00;
+  --sel-name: #a800a8;
+  --sel-name-cursor: #a800a8;
   --dir-fg: #b30000;
   --hidden-fg: #909090;
   --ro-fg: #007a00;
@@ -475,6 +475,13 @@ body,
   flex: none;
 }
 
+/* Selected-objects info (WinM): highlighted segment, navy bg + white fg */
+.statusbar .sb-sel {
+  background: #000080;
+  color: #ffffff;
+  padding: 1px 6px;
+}
+
 .statusbar .sb-mid {
   flex: 1;
   min-width: 0;
@@ -566,10 +573,22 @@ body,
   color: var(--sel-name);
 }
 
-/* Selection marker (WinM): sideways triangle in front of the selected name,
-   always the same color as the name text (inherits from .c-name). */
+/* Selection marker (WinM): sideways triangle in its own column at the row's
+   very front, left of the icon; always the same color as the selected name. */
+.frow.selected {
+  grid-template-columns: 20px 28px 1fr 64px 90px 130px;
+}
 .frow .sel-mark {
-  margin-right: 4px;
+  text-align: center;
+}
+.frow.selected .sel-mark {
+  color: var(--sel-name);
+}
+.frow.cursor.selected .sel-mark {
+  color: var(--sel-name-cursor);
+}
+.frow.cursor-dim.selected .sel-mark {
+  color: var(--sel-name);
 }
 
 .frow.cursor .c-name {

@@ -67,8 +67,14 @@ export default function StatusBar({ panel, showDrive = true, kbMb = false }: { p
         {kbMb
           ? t("status.countsKbMb", { d: dirs, f: files, b: formatSize(bytes) })
           : t("status.counts", { d: dirs, f: files, b: num(bytes) })}
-        {state.selected.size > 0 &&
-          ` · ${t("panel.selected", { n: state.selected.size, b: num(selBytes) })}`}
+        {state.selected.size > 0 && (
+          <>
+            {" · "}
+            <span className="sb-sel">
+              {t("panel.selected", { n: state.selected.size, b: num(selBytes) })}
+            </span>
+          </>
+        )}
         {state.filter && ` · ${t("panel.filter", { f: state.filter })}`}
       </span>
       <span className="sb-mid">
