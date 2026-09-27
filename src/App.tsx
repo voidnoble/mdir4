@@ -2,6 +2,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import Panel from "./components/Panel";
 import Toolbar, { type ToolDef } from "./components/Toolbar";
+import {
+  ArchiveIcon,
+  BookmarkIcon,
+  CopyIcon,
+  DeleteIcon,
+  HelpIcon,
+  MkdirIcon,
+  MoveIcon,
+  RefreshIcon,
+  RenameIcon,
+  SettingsIcon,
+  TreeIcon,
+} from "./components/icons";
 import PathBar from "./components/PathBar";
 import StatusBar from "./components/StatusBar";
 import PathDialog from "./dialogs/PathDialog";
@@ -869,15 +882,15 @@ function App() {
 
   // Toolbar actions (same handlers as keyboard shortcuts).
   const tools: ToolDef[] = [
-    { id: "refresh", icon: "⟳", title: t("keybar.refresh"), onClick: () => activePanel.refresh() },
-    { id: "mkdir", icon: "📁", title: t("keybar.mkdir"), onClick: () => activePanel.setMkdirMode(true) },
-    { id: "copy", icon: "📋", title: t("keybar.copy"), onClick: () => openCopy("copy") },
-    { id: "move", icon: "➡️", title: t("keybar.move"), onClick: () => openCopy("move") },
-    { id: "delete", icon: "🗑️", title: t("keybar.delete"), onClick: () => openDelete() },
-    { id: "rename", icon: "✏️", title: t("keybar.rename"), onClick: () => openRename() },
+    { id: "refresh", icon: <RefreshIcon />, title: t("keybar.refresh"), onClick: () => activePanel.refresh() },
+    { id: "mkdir", icon: <MkdirIcon />, title: t("keybar.mkdir"), onClick: () => activePanel.setMkdirMode(true) },
+    { id: "copy", icon: <CopyIcon />, title: t("keybar.copy"), onClick: () => openCopy("copy") },
+    { id: "move", icon: <MoveIcon />, title: t("keybar.move"), onClick: () => openCopy("move") },
+    { id: "delete", icon: <DeleteIcon />, title: t("keybar.delete"), onClick: () => openDelete() },
+    { id: "rename", icon: <RenameIcon />, title: t("keybar.rename"), onClick: () => openRename() },
     {
       id: "zip",
-      icon: "🗜️",
+      icon: <ArchiveIcon />,
       title: t("keybar.archive"),
       onClick: () => {
         const ce = cursorEntry();
@@ -885,10 +898,10 @@ function App() {
         else openZip();
       },
     },
-    { id: "mcd", icon: "📍", title: t("keybar.mcd"), onClick: () => openMcd() },
-    { id: "qcd", icon: "📌", title: t("keybar.qcd"), onClick: () => openQcd() },
-    { id: "settings", icon: "⚙️", title: t("keybar.settings"), onClick: () => openSettings() },
-    { id: "help", icon: "❓", title: t("keybar.help"), onClick: () => setDialog({ kind: "help" }) },
+    { id: "mcd", icon: <TreeIcon />, title: t("keybar.mcd"), onClick: () => openMcd() },
+    { id: "qcd", icon: <BookmarkIcon />, title: t("keybar.qcd"), onClick: () => openQcd() },
+    { id: "settings", icon: <SettingsIcon />, title: t("keybar.settings"), onClick: () => openSettings() },
+    { id: "help", icon: <HelpIcon />, title: t("keybar.help"), onClick: () => setDialog({ kind: "help" }) },
   ];
 
   // Keybar item: highlight the leading shortcut key (e.g. "F2" in "F2 새로고침").

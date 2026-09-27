@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
+
 export interface ToolDef {
   id: string;
-  icon: string;
+  icon: ReactNode;
   title: string;
   onClick: () => void;
 }
