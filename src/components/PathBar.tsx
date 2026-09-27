@@ -5,8 +5,9 @@ interface PathBarProps {
 }
 
 /**
- * App-level path bar (WinM classic): white sunken combo-box field showing
- * `path + separator + filter` (e.g. `C:\Downloads\*.*`); click opens the path dialog.
+ * App-level path bar (per macmdir-default-002.png): plain text on the flat
+ * `#f0f0f0` chrome, `path + separator + filter` (e.g. `C:\Downloads\*.*`).
+ * Click opens the path dialog.
  */
 export default function PathBar({ path, filter, onOpen }: PathBarProps) {
   const sep = path.includes("\\") ? "\\" : "/";
@@ -20,29 +21,15 @@ export default function PathBar({ path, filter, onOpen }: PathBarProps) {
   };
 
   return (
-    <div className="pathbar">
-      <div
-        className="path-field"
-        title={text}
-        role="button"
-        tabIndex={0}
-        onClick={onOpen}
-        onKeyDown={openOnKey}
-      >
-        <span className="path-text">{text}</span>
-        <span
-          className="path-drop"
-          role="button"
-          tabIndex={-1}
-          aria-label="open"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpen();
-          }}
-        >
-          ▼
-        </span>
-      </div>
+    <div
+      className="pathbar"
+      title={text}
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={openOnKey}
+    >
+      {text}
     </div>
   );
 }

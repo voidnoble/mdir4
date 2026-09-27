@@ -37,11 +37,11 @@
   --btn-hover: #383838;
   --btn-border: #4a4a4a;
   --key-fg: #0000cc;
-  /* WinM classic chrome (header/footer bars) */
-  --bar-bg: #d4d0c8;
+  /* WinM chrome (header/footer bars) - sampled from macmdir-default-002.png */
+  --bar-bg: #f0f0f0;
   --bar-fg: #000000;
   --bar-edge-hi: #ffffff;
-  --bar-edge-lo: #808080;
+  --bar-edge-lo: #a0a0a0;
   --field-bg: #ffffff;
   color: var(--fg);
   background-color: var(--bg);
@@ -83,11 +83,11 @@
   --btn-hover: #d4d4d4;
   --btn-border: #b5b5b5;
   --key-fg: #0000cc;
-  /* WinM classic chrome (header/footer bars) */
-  --bar-bg: #d4d0c8;
+  /* WinM chrome (header/footer bars) - sampled from macmdir-default-002.png */
+  --bar-bg: #f0f0f0;
   --bar-fg: #000000;
   --bar-edge-hi: #ffffff;
-  --bar-edge-lo: #808080;
+  --bar-edge-lo: #a0a0a0;
   --field-bg: #ffffff;
 }
 
@@ -191,45 +191,23 @@ body,
 }
 
 .pathbar {
-  padding: 1px 2px 3px;
-}
-
-.path-field {
-  display: flex;
-  align-items: stretch;
-  background: var(--field-bg);
-  color: #000;
-  border: 1px solid;
-  border-color: var(--bar-edge-lo) var(--bar-edge-hi) var(--bar-edge-hi) var(--bar-edge-lo);
+  border-top: 1px solid var(--bar-edge-lo);
+  padding: 3px 8px;
   font-size: 12px;
-  line-height: 20px;
-  height: 22px;
+  color: var(--bar-fg);
   cursor: pointer;
-}
-
-.path-field:hover {
-  outline: 1px dotted #000;
-  outline-offset: -4px;
-}
-
-.path-text {
-  flex: 1;
-  padding: 0 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.path-drop {
-  flex: none;
-  width: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 8px;
-  color: #000;
-  background: var(--bar-bg);
-  border-left: 1px solid var(--bar-edge-lo);
+.pathbar:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.pathbar:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -3px;
 }
 
 /* inline new-folder input at the top of the panel */
