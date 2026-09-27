@@ -116,6 +116,16 @@ export async function fsHome(): Promise<string> {
   return invoke<string>("fs_home");
 }
 
+export interface DiskSpace {
+  free: number;
+  total: number;
+}
+
+/** Free/total bytes of the volume containing `path`. */
+export async function fsDiskSpace(path: string): Promise<DiskSpace> {
+  return invoke<DiskSpace>("fs_disk_space", { path });
+}
+
 export interface ConflictInfo {
   source: string;
   dest: string;

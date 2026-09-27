@@ -36,7 +36,13 @@
   --btn-bg: #2a2a2a;
   --btn-hover: #383838;
   --btn-border: #4a4a4a;
-  --key-fg: #6cb8ff;
+  --key-fg: #0000cc;
+  /* WinM classic chrome (header/footer bars) */
+  --bar-bg: #d4d0c8;
+  --bar-fg: #000000;
+  --bar-edge-hi: #ffffff;
+  --bar-edge-lo: #808080;
+  --field-bg: #ffffff;
   color: var(--fg);
   background-color: var(--bg);
 }
@@ -76,7 +82,13 @@
   --btn-bg: #e2e2e2;
   --btn-hover: #d4d4d4;
   --btn-border: #b5b5b5;
-  --key-fg: #0b5a8a;
+  --key-fg: #0000cc;
+  /* WinM classic chrome (header/footer bars) */
+  --bar-bg: #d4d0c8;
+  --bar-fg: #000000;
+  --bar-edge-hi: #ffffff;
+  --bar-edge-lo: #808080;
+  --field-bg: #ffffff;
 }
 
 * {
@@ -122,54 +134,91 @@ body,
   box-shadow: 0 0 0 1px var(--accent);
 }
 
-.pane-path {
-  min-height: 30px;
-  display: flex;
-  align-items: center;
-  padding: 2px 8px;
-  background: var(--bg3);
-  border-bottom: 1px solid var(--border);
-  overflow: hidden;
+/* ---------- app header: toolbar + path bar (WinM classic) ---------- */
+
+.app-header {
+  background: var(--bar-bg);
+  color: var(--bar-fg);
+  border-bottom: 1px solid var(--bar-edge-lo);
 }
 
-.breadcrumb {
+.toolbar {
   display: flex;
   align-items: center;
+  gap: 1px;
+  padding: 3px 4px;
+}
+
+.tool-wrap {
+  display: flex;
+  align-items: stretch;
+}
+
+.tool-sep {
+  width: 1px;
+  background: var(--bar-edge-lo);
+  margin: 3px 4px;
+}
+
+.tool-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  min-width: 30px;
+  height: 28px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--bar-fg);
+  cursor: pointer;
+  padding: 2px 5px;
+}
+
+.tool-btn:hover {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: var(--bar-edge-lo);
+}
+
+.tool-btn:active {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: var(--bar-edge-lo);
+}
+
+.pathbar {
+  padding: 0 4px 4px;
+}
+
+.path-field {
+  background: var(--field-bg);
+  color: #000;
+  border-top: 2px solid var(--bar-edge-lo);
+  border-left: 2px solid var(--bar-edge-lo);
+  border-bottom: 2px solid var(--bar-edge-hi);
+  border-right: 2px solid var(--bar-edge-hi);
+  padding: 3px 6px;
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: text;
-}
-
-.breadcrumb .sep {
-  color: var(--fg-faint3);
-  margin: 0 2px;
-}
-
-.crumb {
-  background: none;
-  border: none;
-  color: var(--crumb);
-  font: inherit;
-  padding: 2px 4px;
-  border-radius: 3px;
   cursor: pointer;
-  white-space: nowrap;
 }
 
-.crumb:hover {
-  background: var(--border);
-  color: var(--on-accent);
+.path-field:hover {
+  outline: 1px dotted #000;
+  outline-offset: -4px;
 }
 
-.inline-input {
+/* inline new-folder input at the top of the panel */
+.mkdir-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  width: 100%;
+  padding: 4px 8px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  color: var(--fg-dim);
 }
 
-.inline-input input {
+.mkdir-row input {
   flex: 1;
   background: var(--bg);
   border: 1px solid var(--accent);
@@ -220,23 +269,39 @@ body,
   cursor: pointer;
 }
 
-.pane-status {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 3px 8px;
-  font-size: 11px;
-  color: var(--fg-dim);
-  background: var(--bg3);
-  border-top: 1px solid var(--border);
-  white-space: nowrap;
-  overflow: hidden;
+/* ---------- app footer: status bar + keybar (WinM classic) ---------- */
+
+.app-footer {
+  background: var(--bar-bg);
+  color: var(--bar-fg);
+  border-top: 1px solid var(--bar-edge-lo);
 }
 
-.pane-status .cursor-info {
+.statusbar {
+  display: flex;
+  gap: 3px;
+  padding: 3px 4px;
+  font-size: 12px;
+}
+
+.statusbar .seg {
+  border-top: 1px solid var(--bar-edge-lo);
+  border-left: 1px solid var(--bar-edge-lo);
+  border-bottom: 1px solid var(--bar-edge-hi);
+  border-right: 1px solid var(--bar-edge-hi);
+  padding: 2px 8px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--info);
+}
+
+.statusbar .seg.grow {
+  flex: 1;
+}
+
+.statusbar .seg.right {
+  margin-left: auto;
+  max-width: 40%;
 }
 
 /* ---------- virtual list ---------- */
@@ -364,23 +429,24 @@ body,
   color: var(--cursor-fg-dim);
 }
 
-/* ---------- keybar ---------- */
+/* ---------- keybar (inside app footer) ---------- */
 
 .keybar {
   display: flex;
   gap: 2px;
-  padding: 4px;
-  background: var(--bg3);
-  border-top: 1px solid var(--border);
+  padding: 3px 4px;
+  background: transparent;
+  border-top: 1px solid var(--bar-edge-lo);
   overflow-x: auto;
 }
 
 .keybar span {
-  padding: 3px 8px;
-  background: var(--border);
-  border-radius: 4px;
+  padding: 2px 6px;
+  background: transparent;
+  border-radius: 0;
   white-space: nowrap;
-  color: var(--fg-faint2);
+  color: var(--bar-fg);
+  font-size: 12px;
 }
 
 .keybar span b {
@@ -389,12 +455,12 @@ body,
 }
 
 .keybar span.done {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: transparent;
+  color: var(--bar-fg);
 }
 
 .keybar span.done b {
-  color: var(--on-accent);
+  color: var(--key-fg);
 }
 
 /* ---------- dialogs ---------- */

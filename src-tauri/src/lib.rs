@@ -18,6 +18,7 @@ pub fn run() {
             fs::commands::fs_cancel,
             fs::commands::fs_check_conflicts,
             fs::commands::fs_home,
+            fs::commands::fs_disk_space,
             archive::fs_zip_list,
             archive::fs_zip_create,
             archive::fs_zip_extract,

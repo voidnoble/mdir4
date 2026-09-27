@@ -15,6 +15,14 @@ pub struct Entry {
     pub hidden: bool,
 }
 
+/// Disk space of the volume containing `path`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DiskSpace {
+    pub free: u64,
+    pub total: u64,
+}
+
 /// What to do when the target already exists (copy / move).
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]

@@ -3,7 +3,7 @@ import VirtualList from "./VirtualList";
 import type { PanelApi } from "../hooks/usePanel";
 import { fsMakeDir } from "../lib/fs";
 import { formatDate, formatSize, fileIcon } from "../lib/format";
-import { joinPath, splitSegments } from "../lib/path";
+import { joinPath } from "../lib/path";
 import { useT } from "../i18n";
 import { extColorFor, type ExtColors } from "../theme";
 
@@ -21,11 +21,8 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
   const t = useT();
   const { state, listRef, mkdirMode, setMkdirMode } = api;
   const { path, entries, cursor, selected, loading, error } = state;
-  const [editingPath, setEditingPath] = useState(false);
-  const [pathDraft, setPathDraft] = useState(path);
   const [mkdirDraft, setMkdirDraft] = useState("");
   const mkdirInputRef = useRef<HTMLInputElement>(null);
-  const pathInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (mkdirMode) {
@@ -33,16 +30,6 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
       setTimeout(() => mkdirInputRef.current?.focus(), 0);
     }
   }, [mkdirMode]);
-
-  useEffect(() => {
-    if (editingPath) {
-      setPathDraft(path);
-      setTimeout(() => {
-        pathInputRef.current?.focus();
-        pathInputRef.current?.select();
-      }, 0);
-    }
-  }, [editingPath, path]);
 
   const commitMkdir = async () => {
     const name = mkdirDraft.trim();
@@ -55,12 +42,6 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
       // keep it quiet in P2; P3 surfaces op errors
       console.warn("mkdir failed", e);
     }
-  };
-
-  const commitPath = () => {
-    setEditingPath(false);
-    const p = pathDraft.trim();
-    if (p && p !== path) api.load(p);
   };
 
   const renderRow = (i: number) => {
@@ -95,63 +76,28 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
     );
   };
 
-  const cursorEntry = entries[cursor];
-  const segments = splitSegments(path);
-
   return (
     <section
       className={`pane${active ? " active" : ""}`}
       onMouseDown={onActivate}
       aria-label={label}
     >
-      <div className="pane-path">
-        {mkdirMode ? (
-          <div className="inline-input">
-            <span>{t("panel.newFolder")}</span>
-            <input
-              ref={mkdirInputRef}
-              value={mkdirDraft}
-              onChange={(ev) => setMkdirDraft(ev.target.value)}
-              onKeyDown={(ev) => {
-                if (ev.key === "Enter") commitMkdir();
-                else if (ev.key === "Escape") setMkdirMode(false);
-                ev.stopPropagation();
-              }}
-              placeholder={t("panel.folderNamePh")}
-            />
-          </div>
-        ) : editingPath ? (
-          <div className="inline-input">
-            <input
-              ref={pathInputRef}
-              value={pathDraft}
-              onChange={(ev) => setPathDraft(ev.target.value)}
-              onKeyDown={(ev) => {
-                if (ev.key === "Enter") commitPath();
-                else if (ev.key === "Escape") setEditingPath(false);
-                ev.stopPropagation();
-              }}
-            />
-          </div>
-        ) : (
-          <div className="breadcrumb" onDoubleClick={() => setEditingPath(true)} title={t("panel.pathEditHint")}>
-            {segments.map((s, i) => (
-              <span key={s.path}>
-                {i > 0 && <span className="sep">›</span>}
-                <button
-                  className="crumb"
-                  onClick={(ev) => {
-                    ev.stopPropagation();
-                    if (s.path !== path) api.load(s.path);
-                  }}
-                >
-                  {s.label}
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      {mkdirMode && (
+        <div className="mkdir-row">
+          <span>{t("panel.newFolder")}</span>
+          <input
+            ref={mkdirInputRef}
+            value={mkdirDraft}
+            onChange={(ev) => setMkdirDraft(ev.target.value)}
+            onKeyDown={(ev) => {
+              if (ev.key === "Enter") commitMkdir();
+              else if (ev.key === "Escape") setMkdirMode(false);
+              ev.stopPropagation();
+            }}
+            placeholder={t("panel.folderNamePh")}
+          />
+        </div>
+      )}
 
       <div className="col-header">
         <span className="c-icon" />
@@ -208,17 +154,6 @@ export default function Panel({ api, active, onActivate, label, extColors }: Pan
             renderRow={renderRow}
           />
         )}
-      </div>
-
-      <div className="pane-status">
-        <span>
-          {t("panel.items", { n: entries.length })}
-          {selected.size > 0 && ` · ${t("panel.selected", { n: selected.size })}`}
-          {state.filter && ` · ${t("panel.filter", { f: state.filter })}`}
-        </span>
-        <span className="cursor-info">
-          {cursorEntry ? `${cursorEntry.name}${cursorEntry.isDir ? "" : ` · ${formatSize(cursorEntry.size)}`}` : ""}
-        </span>
       </div>
     </section>
   );

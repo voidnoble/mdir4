@@ -2,7 +2,7 @@ use super::error::FsError;
 use super::ops;
 use super::registry::OpRegistry;
 use super::scan;
-use super::types::{ConflictInfo, Entry, OpSummary, OverwritePolicy, ProgressPayload};
+use super::types::{ConflictInfo, DiskSpace, Entry, OpSummary, OverwritePolicy, ProgressPayload};
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Emitter, State};
 
@@ -150,4 +150,17 @@ pub async fn fs_home() -> Result<String, FsError> {
     std::env::var("HOME")
         .or_else(|_| std::env::var("USERPROFILE"))
         .map_err(|_| FsError::internal("cannot determine home directory"))
+}
+
+/// Free/total bytes of the volume containing `path`.
+#[tauri::command(rename_all = "camelCase")]
+pub async fn fs_disk_space(path: String) -> Result<DiskSpace, FsError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let p = Path::new(&path);
+        let free = fs2::available_space(p).map_err(|e| FsError::from_io(e, p))?;
+        let total = fs2::total_space(p).map_err(|e| FsError::from_io(e, p))?;
+        Ok(DiskSpace { free, total })
+    })
+    .await
+    .map_err(|_| FsError::internal("disk space task panicked"))?
 }

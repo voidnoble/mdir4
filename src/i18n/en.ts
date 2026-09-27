@@ -45,6 +45,7 @@ export const en: Record<string, string> = {
 
   "keybar.refresh": "F2 Refresh",
   "keybar.copy": "F5 Copy",
+  "keybar.move": "M Move",
   "keybar.rename": "F6 Rename",
   "keybar.mkdir": "F7 Mkdir",
   "keybar.delete": "F8 Delete",
@@ -57,6 +58,11 @@ export const en: Record<string, string> = {
 
   "panel.name": "Name",
   "panel.ext": "Ext",
+  "status.counts": "{d} folders, {f} files ({b} bytes)",
+  "status.driveFree": "{v} {s} bytes ({p}%) free",
+  "path.title": "Go to Path",
+  "path.label": "Path:",
+  "path.hint": "Enter a path to open",
   "panel.size": "Size",
   "panel.date": "Modified",
   "panel.loading": "Loading…",

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import Panel from "./components/Panel";
+import Toolbar, { type ToolDef } from "./components/Toolbar";
+import PathBar from "./components/PathBar";
+import StatusBar from "./components/StatusBar";
+import PathDialog from "./dialogs/PathDialog";
 import BatchRenameDialog from "./dialogs/BatchRenameDialog";
 import CombineDialog from "./dialogs/CombineDialog";
 import CopyDialog from "./dialogs/CopyDialog";
@@ -57,6 +61,7 @@ type DialogState =
   | { kind: "settings" }
   | { kind: "mcd" }
   | { kind: "qcd" }
+  | { kind: "path" }
   | { kind: "split"; path: string; dest: string }
   | { kind: "combine"; firstPart: string; dest: string }
   | { kind: "batchRename"; files: { path: string; name: string }[] }
@@ -860,6 +865,32 @@ function App() {
 
   const d = dialog;
 
+  const activePanel = active === 0 ? left : right;
+
+  // Toolbar actions (same handlers as keyboard shortcuts).
+  const tools: ToolDef[] = [
+    { id: "refresh", icon: "⟳", title: t("keybar.refresh"), onClick: () => activePanel.refresh() },
+    { id: "mkdir", icon: "📁", title: t("keybar.mkdir"), onClick: () => activePanel.setMkdirMode(true) },
+    { id: "copy", icon: "📋", title: t("keybar.copy"), onClick: () => openCopy("copy") },
+    { id: "move", icon: "➡️", title: t("keybar.move"), onClick: () => openCopy("move") },
+    { id: "delete", icon: "🗑️", title: t("keybar.delete"), onClick: () => openDelete() },
+    { id: "rename", icon: "✏️", title: t("keybar.rename"), onClick: () => openRename() },
+    {
+      id: "zip",
+      icon: "🗜️",
+      title: t("keybar.archive"),
+      onClick: () => {
+        const ce = cursorEntry();
+        if (ce && !ce.isDir && ce.name.toLowerCase().endsWith(".zip")) openExtract(ce.path);
+        else openZip();
+      },
+    },
+    { id: "mcd", icon: "📍", title: t("keybar.mcd"), onClick: () => openMcd() },
+    { id: "qcd", icon: "📌", title: t("keybar.qcd"), onClick: () => openQcd() },
+    { id: "settings", icon: "⚙️", title: t("keybar.settings"), onClick: () => openSettings() },
+    { id: "help", icon: "❓", title: t("keybar.help"), onClick: () => setDialog({ kind: "help" }) },
+  ];
+
   // Keybar item: highlight the leading shortcut key (e.g. "F2" in "F2 새로고침").
   const kb = (key: string) => {
     const s = t(key);
@@ -880,6 +911,10 @@ function App() {
 
   return (
     <div className="app">
+      <header className="app-header">
+        <Toolbar tools={tools} />
+        <PathBar path={activePanel.state.path} onOpen={() => setDialog({ kind: "path" })} />
+      </header>
       <main className="panes">
         {ready && (
           <>
@@ -900,24 +935,27 @@ function App() {
           </>
         )}
       </main>
-      <footer className="keybar">
-        {kb("keybar.help")}
-        {kb("keybar.refresh")}
-        {kb("keybar.copy")}
-        {kb("keybar.rename")}
-        {kb("keybar.mkdir")}
-        {kb("keybar.delete")}
-        {kb("keybar.switch")}
-        {kb("keybar.select")}
-        {kb("keybar.archive")}
-        {kb("keybar.split")}
-        {kb("keybar.open")}
-        {kb("keybar.filter")}
-        {kb("keybar.flist")}
-        {kb("keybar.mcd")}
-        {kb("keybar.qcd")}
-        {kb("keybar.props")}
-        {kb("keybar.settings")}
+      <footer className="app-footer">
+        <StatusBar panel={activePanel} />
+        <div className="keybar">
+          {kb("keybar.help")}
+          {kb("keybar.refresh")}
+          {kb("keybar.copy")}
+          {kb("keybar.rename")}
+          {kb("keybar.mkdir")}
+          {kb("keybar.delete")}
+          {kb("keybar.switch")}
+          {kb("keybar.select")}
+          {kb("keybar.archive")}
+          {kb("keybar.split")}
+          {kb("keybar.open")}
+          {kb("keybar.filter")}
+          {kb("keybar.flist")}
+          {kb("keybar.mcd")}
+          {kb("keybar.qcd")}
+          {kb("keybar.props")}
+          {kb("keybar.settings")}
+        </div>
       </footer>
 
       {d?.kind === "copy" && (
@@ -981,6 +1019,16 @@ function App() {
         />
       )}
       {d?.kind === "mcd" && <McdDialog onClose={() => setDialog(null)} onSelect={selectMcd} />}
+      {d?.kind === "path" && (
+        <PathDialog
+          initial={activePanel.state.path}
+          onGo={(p) => {
+            setDialog(null);
+            activePanel.load(p);
+          }}
+          onClose={() => setDialog(null)}
+        />
+      )}
       {d?.kind === "qcd" && (
         <QcdDialog
           entries={configRef.current.qcd}

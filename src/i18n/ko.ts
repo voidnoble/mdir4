@@ -45,6 +45,7 @@ export const ko: Record<string, string> = {
 
   "keybar.refresh": "F2 새로고침",
   "keybar.copy": "F5 복사",
+  "keybar.move": "M 이동",
   "keybar.rename": "F6 이름바꾸기",
   "keybar.mkdir": "F7 폴더만들기",
   "keybar.delete": "F8 삭제",
@@ -57,6 +58,11 @@ export const ko: Record<string, string> = {
 
   "panel.name": "이름",
   "panel.ext": "확장",
+  "status.counts": "{d}폴더, {f}파일 ({b} 바이트)",
+  "status.driveFree": "{v} {s}바이트({p}%) 남음",
+  "path.title": "경로로 이동",
+  "path.label": "경로:",
+  "path.hint": "이동할 경로를 입력하세요",
   "panel.size": "크기",
   "panel.date": "수정한 날짜",
   "panel.loading": "읽는 중…",
