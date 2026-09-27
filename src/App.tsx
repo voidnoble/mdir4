@@ -112,6 +112,18 @@ function errMsg(e: unknown): string {
   return String(e);
 }
 
+/** Logical letter for Alt/Option+key combos (Windows Alt == macOS Option).
+ *  On Windows Alt+C gives e.key="c"; on macOS Option(⌥) also sets altKey but
+ *  ⌥C yields a composed char ("ç"), so fall back to the physical key code. */
+function comboLetter(e: KeyboardEvent): string {
+  const k = e.key.length === 1 ? e.key.toLowerCase() : "";
+  if (/^[a-z]$/.test(k) || k === "-") return k;
+  const m = /^Key([A-Z])$/.exec(e.code);
+  if (m) return m[1].toLowerCase();
+  if (e.code === "Minus") return "-";
+  return k;
+}
+
 function App() {
   const t = useT();
   const left = usePanel("/");
@@ -661,8 +673,9 @@ function App() {
       }
 
       // ---- Ctrl+Alt combos (WinM 파일 메뉴) ----
+      // macOS: Option(⌥) reports altKey; comboLetter maps ⌥+key like Alt+key
       if (e.ctrlKey && e.altKey && !e.metaKey && e.key.length === 1) {
-        switch (e.key.toLowerCase()) {
+        switch (comboLetter(e)) {
           case "s": // 파일 분할
           case "c": // 파일 결합
           case "m": // 파일 합치기
@@ -760,8 +773,10 @@ function App() {
       }
 
       // ---- Alt+letter combos (WinM action accelerators) ----
+      // macOS: Option(⌥) reports altKey; comboLetter maps ⌥+key like Alt+key
+      // (⌥C yields "ç", so the physical key code is the fallback)
       if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
-        switch (e.key.toLowerCase()) {
+        switch (comboLetter(e)) {
           case "c":
             e.preventDefault();
             openCopy("copy"); // 복사
