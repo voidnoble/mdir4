@@ -362,9 +362,9 @@ body,
   grid-template-columns: 28px 1fr 64px 90px 130px;
   padding: 3px 8px;
   font-size: 11px;
-  color: var(--fg-faint2);
-  background: var(--bg4);
-  border-bottom: 1px solid var(--border);
+  color: var(--bar-fg);
+  background: var(--bar-bg);
+  border-bottom: 1px solid var(--bar-edge-lo);
 }
 
 .pane-body {
