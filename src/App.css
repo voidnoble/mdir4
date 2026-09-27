@@ -492,16 +492,16 @@ body,
   color: var(--cursor-dim-fg);
 }
 
-/* Type-ahead match flash: bright green bar (macmdir-type-ahead-search-02.png).
- * Placed after the cursor rules so it wins on equal specificity. */
-.frow.search-hit,
+/* Type-ahead match: the bar takes the item's own color (directory color for
+ * folders, extension color for files — set inline); children use the cursor
+ * text color so they stay readable. Placed after the other row rules so it
+ * wins on equal specificity. */
 .frow.search-hit .c-icon,
 .frow.search-hit .c-name,
 .frow.search-hit .c-ext,
 .frow.search-hit .c-size,
 .frow.search-hit .c-date {
-  background: #00ff00;
-  color: #000;
+  color: var(--cursor-fg);
 }
 
 .frow.is-dir .c-name {

@@ -9,6 +9,12 @@ import { extColorFor, type ExtColors } from "../theme";
 
 const ROW_H = 26;
 
+/** Read a CSS variable (e.g. the directory color) with a fallback. */
+function cssVar(name: string, fallback: string): string {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+
 interface PanelProps {
   api: PanelApi;
   active: boolean;
@@ -77,12 +83,22 @@ export default function Panel({
     // On the cursor bar (active or inactive) the row uses the bar's text color,
     // so per-extension colors are suppressed there (WinM classic behavior).
     const nameColor = isCursor ? undefined : extColorFor(extColors, e.name, e.isDir);
+    // Type-ahead match: the bar takes the item's own color — the directory
+    // color for folders, the extension color for files — instead of a fixed one.
+    let hitStyle: { backgroundColor: string; color: string } | undefined;
+    if (isHit) {
+      const bg = e.isDir
+        ? cssVar("--dir-fg", "#ff0000")
+        : (extColorFor(extColors, e.name, e.isDir) ?? cssVar("--cursor-bg", "#ff0000"));
+      hitStyle = { backgroundColor: bg, color: "var(--cursor-fg)" };
+    }
     const dot = e.isDir ? -1 : e.name.lastIndexOf(".");
     const baseName = dot > 0 ? e.name.slice(0, dot) : e.name;
     const ext = dot > 0 ? e.name.slice(dot + 1) : "";
     return (
       <div
         className={`frow${e.isDir ? " is-dir" : ""}${isCursor ? (active ? " cursor" : " cursor-dim") : ""}${isSelected ? " selected" : ""}${isHit ? " search-hit" : ""}`}
+        style={hitStyle}
         onMouseDown={() => {
           onActivate();
           api.setCursor(i);
