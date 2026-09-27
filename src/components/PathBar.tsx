@@ -4,14 +4,16 @@ interface PathBarProps {
   /** type-ahead search buffer; shown in the green box at the bar's right end */
   searchBuf: string;
   onOpen: () => void;
+  /** active panel: peach background (#f4b99c), inactive: #f0f0f0 */
+  active?: boolean;
 }
 
 /**
- * App-level path bar (per macmdir-default-002.png): plain text on the flat
- * `#f0f0f0` chrome, `path + separator + filter` (e.g. `C:\Downloads\*.*`).
- * Click opens the path dialog.
+ * Per-panel path bar (WinM reference): flat, `path + separator + filter`
+ * (e.g. `C:\Downloads\*.*`). The active panel's bar is peach (#f4b99c);
+ * inactive panels use #f0f0f0. Click opens the path dialog.
  */
-export default function PathBar({ path, filter, searchBuf, onOpen }: PathBarProps) {
+export default function PathBar({ path, filter, searchBuf, onOpen, active = false }: PathBarProps) {
   const sep = path.includes("\\") ? "\\" : "/";
   const text = `${path}${path.endsWith(sep) ? "" : sep}${filter || "*.*"}`;
 
@@ -24,7 +26,7 @@ export default function PathBar({ path, filter, searchBuf, onOpen }: PathBarProp
 
   return (
     <div
-      className="pathbar"
+      className={`pathbar${active ? " active" : ""}`}
       title={text}
       role="button"
       tabIndex={0}

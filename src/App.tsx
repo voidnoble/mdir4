@@ -15,7 +15,6 @@ import {
   SettingsIcon,
   TreeIcon,
 } from "./components/icons";
-import PathBar from "./components/PathBar";
 import StatusBar from "./components/StatusBar";
 import PathDialog from "./dialogs/PathDialog";
 import DriveDialog from "./dialogs/DriveDialog";
@@ -138,6 +137,8 @@ function App() {
   const [showPathbar, setShowPathbar] = useState(true);
   const [showColHeader, setShowColHeader] = useState(true);
   const [showStatusbar, setShowStatusbar] = useState(true);
+  // panel layout: "single" (default) | "vertical" | "horizontal" (보기 > 창)
+  const [layout, setLayoutState] = useState<"single" | "vertical" | "horizontal">("single");
   // per-panel visibility from the settings window (master toggles above)
   const [colHeaderL, setColHeaderL] = useState(true);
   const [colHeaderR, setColHeaderR] = useState(true);
@@ -185,6 +186,7 @@ function App() {
       setPathbarR(w.panel2.showPathBar);
       setStatusbarL(w.panel1.showStatusBar);
       setStatusbarR(w.panel2.showStatusBar);
+      setLayoutState(cfg.layout ?? "single");
     },
     [],
   );
@@ -255,6 +257,12 @@ function App() {
     configRef.current = merged;
     saveConfig(merged).catch(() => {});
   }, []);
+
+  /** 보기 > 창: 단일/수직분할/수평분할 (메뉴 액션 + Ctrl+1/2/3 공용) */
+  const applyLayout = useCallback((m: "single" | "vertical" | "horizontal") => {
+    setLayoutState(m);
+    persistConfig({ ...configRef.current, layout: m });
+  }, [persistConfig]);
 
   const saveSettings = useCallback(
     (cfg: AppConfig, close: boolean, clearPaths?: boolean) => {
@@ -815,6 +823,18 @@ function App() {
       }
       if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && e.key.length === 1) {
         switch (e.key.toLowerCase()) {
+          case "1":
+            e.preventDefault();
+            applyLayout("single"); // Ctrl+1 단일 창
+            return;
+          case "2":
+            e.preventDefault();
+            applyLayout("vertical"); // Ctrl+2 수직 분할
+            return;
+          case "3":
+            e.preventDefault();
+            applyLayout("horizontal"); // Ctrl+3 수평 분할
+            return;
           case "r":
             e.preventDefault();
             panel.refresh(); // Ctrl+R 새로 고침
@@ -1146,6 +1166,7 @@ function App() {
     toggleHeader: () => setShowColHeader((v) => !v),
     toggleStatusbar: () => setShowStatusbar((v) => !v),
     toggleHidden: () => activePanel.toggleHidden(),
+    setLayout: (m) => applyLayout(m),
     setSort: (key, dir) => activePanel.setSort(key, dir),
     toggleSortDir: () =>
       activePanel.setSort(
@@ -1177,6 +1198,7 @@ function App() {
         header: showColHeader,
         statusbar: showStatusbar,
         hidden: activePanel.state.showHidden,
+        layout,
         sortKey: activePanel.state.sortKey,
         sortAsc: activePanel.state.sortDir === "asc",
         filter: activePanel.state.filter,
@@ -1191,6 +1213,7 @@ function App() {
       activePanel,
       uiLang,
       config.theme,
+      layout,
     ],
   );
 
@@ -1262,51 +1285,44 @@ function App() {
     { id: "help", icon: <HelpIcon />, title: t("keybar.help"), onClick: () => setDialog({ kind: "help" }) },
   ];
 
+  // ---- panel rendering (보기 > 창: 단일/수직분할/수평분할) ----
+  const renderPanel = (side: 0 | 1) => {
+    const isLeft = side === 0;
+    const w = config.winm;
+    const wp = isLeft ? w?.panel1 : w?.panel2;
+    return (
+      <Panel
+        key={side}
+        api={isLeft ? left : right}
+        active={active === side}
+        onActivate={() => setActive(side)}
+        label={t(isLeft ? "panel.left" : "panel.right")}
+        extColors={config.customExtColors}
+        extColorOn={w?.color.extEnabled !== false}
+        showColHeader={showColHeader && (isLeft ? colHeaderL : colHeaderR)}
+        showPathBar={showPathbar && (isLeft ? pathbarL : pathbarR)}
+        onOpenPath={() => {
+          setActive(side);
+          setDialog({ kind: "path" });
+        }}
+        colSep={wp?.columnSeparators !== false}
+        rowSep={wp?.rowSeparators !== false}
+        folderColor={w?.disp.folderInFolderColor !== false}
+        rowH={rowH}
+      />
+    );
+  };
+
+  const visibleSides: (0 | 1)[] = layout === "single" ? [active] : [0, 1];
+
   return (
     <div className="app">
       <header className="app-header">
         <MenuBar menus={menus} onAction={fireMenuItem} />
         {showToolbar && <Toolbar tools={tools} />}
-        {showPathbar && (active === 0 ? pathbarL : pathbarR) && (
-          <PathBar
-            path={activePanel.state.path}
-            filter={activePanel.state.filter}
-            searchBuf={activePanel.state.searchBuf}
-            onOpen={() => setDialog({ kind: "path" })}
-          />
-        )}
       </header>
-      <main className="panes">
-        {ready && (
-          <>
-            <Panel
-              api={left}
-              active={active === 0}
-              onActivate={() => setActive(0)}
-              label={t("panel.left")}
-              extColors={config.customExtColors}
-              extColorOn={config.winm?.color.extEnabled !== false}
-              showColHeader={showColHeader && colHeaderL}
-              colSep={config.winm?.panel1.columnSeparators !== false}
-              rowSep={config.winm?.panel1.rowSeparators !== false}
-              folderColor={config.winm?.disp.folderInFolderColor !== false}
-              rowH={rowH}
-            />
-            <Panel
-              api={right}
-              active={active === 1}
-              onActivate={() => setActive(1)}
-              label={t("panel.right")}
-              extColors={config.customExtColors}
-              extColorOn={config.winm?.color.extEnabled !== false}
-              showColHeader={showColHeader && colHeaderR}
-              colSep={config.winm?.panel2.columnSeparators !== false}
-              rowSep={config.winm?.panel2.rowSeparators !== false}
-              folderColor={config.winm?.disp.folderInFolderColor !== false}
-              rowH={rowH}
-            />
-          </>
-        )}
+      <main className={`panes layout-${layout}`}>
+        {ready && visibleSides.map(renderPanel)}
       </main>
       <footer className="app-footer">
         {showStatusbar && (active === 0 ? statusbarL : statusbarR) && (

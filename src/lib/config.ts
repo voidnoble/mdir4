@@ -34,6 +34,8 @@ export interface AppConfig {
   extUnpacker: string;
   /** WinM-style settings (환경설정 dialog, 7 tabs) */
   winm?: WinmSettings;
+  /** panel layout: "single" (default) | "vertical" | "horizontal" (보기 > 창) */
+  layout?: "single" | "vertical" | "horizontal";
 }
 
 export const defaultConfig: AppConfig = {
@@ -46,6 +48,7 @@ export const defaultConfig: AppConfig = {
   assoc: [],
   extPacker: "",
   extUnpacker: "",
+  layout: "single",
 };
 
 export async function loadConfig(): Promise<AppConfig> {

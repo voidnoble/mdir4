@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import VirtualList from "./VirtualList";
+import PathBar from "./PathBar";
 import type { PanelApi } from "../hooks/usePanel";
 import { fsMakeDir } from "../lib/fs";
 import { formatDate, formatSize, fileIcon } from "../lib/format";
@@ -23,6 +24,9 @@ interface PanelProps {
   extColors?: ExtColors;
   extColorOn?: boolean;
   showColHeader?: boolean;
+  /** per-panel path bar (WinM reference: peach when active) */
+  showPathBar?: boolean;
+  onOpenPath?: () => void;
   colSep?: boolean;
   rowSep?: boolean;
   folderColor?: boolean;
@@ -37,6 +41,8 @@ export default function Panel({
   extColors,
   extColorOn = true,
   showColHeader = true,
+  showPathBar = true,
+  onOpenPath,
   colSep = true,
   rowSep = true,
   folderColor = true,
@@ -141,6 +147,18 @@ export default function Panel({
       onMouseDown={onActivate}
       aria-label={label}
     >
+      {showPathBar && (
+        <PathBar
+          path={path}
+          filter={state.filter}
+          searchBuf={state.searchBuf}
+          active={active}
+          onOpen={() => {
+            onActivate();
+            onOpenPath?.();
+          }}
+        />
+      )}
       {mkdirMode && (
         <div className="mkdir-row">
           <span>{t("panel.newFolder")}</span>

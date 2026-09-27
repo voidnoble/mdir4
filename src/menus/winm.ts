@@ -67,6 +67,7 @@ export interface WinMActions {
   toggleHeader(): void;
   toggleStatusbar(): void;
   toggleHidden(): void;
+  setLayout(m: "single" | "vertical" | "horizontal"): void;
   setSort(key: SortKey, dir: SortDir): void;
   toggleSortDir(): void;
   setFilterPreset(p: string): void;
@@ -87,6 +88,7 @@ export interface WinMState {
   header: boolean;
   statusbar: boolean;
   hidden: boolean;
+  layout: "single" | "vertical" | "horizontal";
   sortKey: SortKey;
   sortAsc: boolean;
   filter: string;
@@ -218,9 +220,27 @@ export function buildWinMMenu(st: WinMState): WinMTop[] {
         it("window", "wm.view.window", {
           mnemonic: "W",
           sub: [
-            it("single", "wm.view.single", { mnemonic: "S", sc: "Ctrl+1", disabled: true }),
-            it("vsplit", "wm.view.vsplit", { mnemonic: "V", sc: "Ctrl+2", disabled: true }),
-            it("hsplit", "wm.view.hsplit", { mnemonic: "H", sc: "Ctrl+3", disabled: true }),
+            it("single", "wm.view.single", {
+              mnemonic: "S",
+              sc: "Ctrl+1",
+              checked: st.layout === "single",
+              act: "setLayout",
+              args: ["single"],
+            }),
+            it("vsplit", "wm.view.vsplit", {
+              mnemonic: "V",
+              sc: "Ctrl+2",
+              checked: st.layout === "vertical",
+              act: "setLayout",
+              args: ["vertical"],
+            }),
+            it("hsplit", "wm.view.hsplit", {
+              mnemonic: "H",
+              sc: "Ctrl+3",
+              checked: st.layout === "horizontal",
+              act: "setLayout",
+              args: ["horizontal"],
+            }),
           ],
         }),
         // NOTE: the reference does not show this submenu's contents; it

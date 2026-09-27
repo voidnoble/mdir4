@@ -130,21 +130,24 @@ body,
   min-height: 0;
 }
 
+/* 보기 > 창: 수평 분할 — panels stacked top/bottom */
+.panes.layout-horizontal {
+  flex-direction: column;
+}
+
 /* ---------- panel ---------- */
 
 .pane {
   flex: 1;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border);
   min-width: 0;
+  min-height: 0;
   background: var(--bg);
 }
 
-.pane.active {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
-}
+/* Active-panel indication is the path bar's background (WinM reference),
+   not a border: no border here. */
 
 /* ---------- app header: toolbar + path bar (WinM classic) ---------- */
 
@@ -203,15 +206,21 @@ body,
 }
 
 .pathbar {
-  border-top: 1px solid var(--bar-edge-lo);
   padding: 3px 8px;
   font-size: 12px;
-  color: var(--bar-fg);
+  color: #000000;
+  background: #f0f0f0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  flex: none;
+}
+
+/* active panel's path bar: peach (WinM reference, sampled #f4b99c) */
+.pathbar.active {
+  background: #f4b99c;
 }
 
 .pathbar-text {
@@ -232,7 +241,11 @@ body,
 }
 
 .pathbar:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: #e4e4e4;
+}
+
+.pathbar.active:hover {
+  background: #efa88a;
 }
 
 .pathbar:focus-visible {
