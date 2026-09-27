@@ -46,7 +46,8 @@ import MenuBar from "./components/MenuBar";
 import { buildWinMMenu, PROG_FILTER, ZIP_FILTER, type WinMItem, type WinMActions } from "./menus/winm";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { AppConfig, ExtAssoc, QcdEntry } from "./lib/config";
-import { defaultConfig, loadConfig, saveConfig } from "./lib/config";
+import { defaultConfig, defaultWinmSettings, loadConfig, saveConfig } from "./lib/config";
+import { setDisplayOpts } from "./lib/format";
 import type { OpSummary, OverwritePolicy } from "./lib/fs";
 import {
   fsCombine,
@@ -137,6 +138,13 @@ function App() {
   const [showPathbar, setShowPathbar] = useState(true);
   const [showColHeader, setShowColHeader] = useState(true);
   const [showStatusbar, setShowStatusbar] = useState(true);
+  // per-panel visibility from the settings window (master toggles above)
+  const [colHeaderL, setColHeaderL] = useState(true);
+  const [colHeaderR, setColHeaderR] = useState(true);
+  const [pathbarL, setPathbarL] = useState(true);
+  const [pathbarR, setPathbarR] = useState(true);
+  const [statusbarL, setStatusbarL] = useState(true);
+  const [statusbarR, setStatusbarR] = useState(true);
   const [rowH, setRowH] = useState(26);
   const dialogRef = useRef(dialog);
   dialogRef.current = dialog;
@@ -154,9 +162,39 @@ function App() {
       } else {
         setTheme(cfg.theme);
       }
+      // WinM settings window values
+      const w = cfg.winm ?? defaultWinmSettings;
+      setDisplayOpts({
+        hour24: w.disp.hour24,
+        year4: w.disp.year4,
+        sizeUnit: w.disp.sizeUnit,
+      });
+      if (w.color.enabled) applyCustomVars(w.color.items);
+      const rs = document.documentElement.style;
+      const setFont = (key: string, name: string, size: number) => {
+        if (name) {
+          rs.setProperty(`--${key}-font`, `"${name}", "Malgun Gothic", sans-serif`);
+          rs.setProperty(`--${key}-size`, `${size}px`);
+        }
+      };
+      setFont("filewin", w.disp.filewinFont.name, w.disp.filewinFont.size);
+      setFont("mcd", w.disp.mcdFont.name, w.disp.mcdFont.size);
+      setColHeaderL(w.panel1.showHeader);
+      setColHeaderR(w.panel2.showHeader);
+      setPathbarL(w.panel1.showPathBar);
+      setPathbarR(w.panel2.showPathBar);
+      setStatusbarL(w.panel1.showStatusBar);
+      setStatusbarR(w.panel2.showStatusBar);
     },
     [],
   );
+
+  const SORT_BY_MAP: Record<string, "name" | "ext" | "size" | "mtime"> = {
+    "이름": "name",
+    "확장자": "ext",
+    "크기": "size",
+    "날짜": "mtime",
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -164,12 +202,24 @@ function App() {
       const cfg = await loadConfig();
       if (cancelled) return;
       applyConfig(cfg);
-      panelsRef.current.left.setShowHidden(cfg.showHidden);
-      panelsRef.current.right.setShowHidden(cfg.showHidden);
+      const w = cfg.winm ?? defaultWinmSettings;
+      const sortL = SORT_BY_MAP[w.panel1.sortBy] ?? "ext";
+      const sortR = SORT_BY_MAP[w.panel2.sortBy] ?? "ext";
+      panelsRef.current.left.setShowHidden(w.panel1.showHidden);
+      panelsRef.current.right.setShowHidden(w.panel2.showHidden);
+      panelsRef.current.left.setSort(sortL, w.panel1.sortAsc ? "asc" : "desc");
+      panelsRef.current.right.setSort(sortR, w.panel2.sortAsc ? "asc" : "desc");
       const home = await fsHome().catch(() => "/");
       if (cancelled) return;
-      panelsRef.current.left.load(cfg.leftPath ?? home);
-      panelsRef.current.right.load(cfg.rightPath ?? home);
+      // start paths: fixed path / WinM default / last-used folder
+      const startPath = (side: "left" | "right") => {
+        if (w.etc.startMode === "path" && w.etc.startPath) return w.etc.startPath;
+        const saved = side === "left" ? cfg.leftPath : cfg.rightPath;
+        if (saved && w.etc.noNetStart && /^\\\\/.test(saved)) return home;
+        return saved ?? home;
+      };
+      panelsRef.current.left.load(startPath("left"));
+      panelsRef.current.right.load(startPath("right"));
       setReady(true);
     })();
     return () => {
@@ -178,9 +228,12 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // persist panel paths (debounced)
+  // persist panel paths (debounced); skipped when the settings window's
+  // "환경 자동 저장" is off, or "WinM 종료시 이전 경로 삭제" is on.
   useEffect(() => {
     if (!ready) return;
+    const w = configRef.current.winm;
+    if (w && (w.etc.autoSave === false || w.etc.clearPrevOnExit)) return;
     const id = window.setTimeout(() => {
       const cfg = { ...configRef.current, leftPath: left.state.path, rightPath: right.state.path };
       configRef.current = cfg;
@@ -189,20 +242,42 @@ function App() {
     return () => window.clearTimeout(id);
   }, [ready, left.state.path, right.state.path]);
 
-  const persistConfig = useCallback((cfg: AppConfig) => {
-    const merged = { ...configRef.current, ...cfg, leftPath: panelsRef.current.left.state.path, rightPath: panelsRef.current.right.state.path };
+  const persistConfig = useCallback((cfg: AppConfig, snapshotPaths = true) => {
+    const merged = {
+      ...configRef.current,
+      ...cfg,
+      // the settings window's "이전 경로 삭제" must survive: don't re-snapshot
+      // the live panel paths when the caller explicitly dropped them.
+      ...(snapshotPaths
+        ? { leftPath: panelsRef.current.left.state.path, rightPath: panelsRef.current.right.state.path }
+        : {}),
+    };
     configRef.current = merged;
     saveConfig(merged).catch(() => {});
   }, []);
 
   const saveSettings = useCallback(
-    (cfg: AppConfig) => {
-      applyConfig(cfg);
-      persistConfig(cfg);
-      // re-apply hidden filter if the setting changed
-      panelsRef.current.left.setShowHidden(cfg.showHidden);
-      panelsRef.current.right.setShowHidden(cfg.showHidden);
-      setDialog(null);
+    (cfg: AppConfig, close: boolean, clearPaths?: boolean) => {
+      const w = cfg.winm ?? defaultWinmSettings;
+      // derive the legacy fields from the WinM settings window values
+      const dropPaths = clearPaths || w.etc.clearPrevOnExit;
+      const merged: AppConfig = {
+        ...cfg,
+        showHidden: w.panel1.showHidden || w.panel2.showHidden,
+        useTrash: !w.proc.noTrash,
+        leftPath: dropPaths ? undefined : panelsRef.current.left.state.path,
+        rightPath: dropPaths ? undefined : panelsRef.current.right.state.path,
+      };
+      applyConfig(merged);
+      persistConfig(merged, !dropPaths);
+      // per-panel sort order + hidden filter
+      const sortL = SORT_BY_MAP[w.panel1.sortBy] ?? "ext";
+      const sortR = SORT_BY_MAP[w.panel2.sortBy] ?? "ext";
+      panelsRef.current.left.setSort(sortL, w.panel1.sortAsc ? "asc" : "desc");
+      panelsRef.current.right.setSort(sortR, w.panel2.sortAsc ? "asc" : "desc");
+      panelsRef.current.left.setShowHidden(w.panel1.showHidden);
+      panelsRef.current.right.setShowHidden(w.panel2.showHidden);
+      if (close) setDialog(null);
     },
     [applyConfig, persistConfig],
   );
@@ -577,11 +652,11 @@ function App() {
     setDialog({ kind: "props", path: ce.path, dir: p.state.path, name: ce.name });
   }, [cursorEntry]);
 
-  const openWithDefault = useCallback(async () => {
+  const openWithDefault = useCallback(async (forcedProg?: string) => {
     const ce = cursorEntry();
     if (!ce || ce.isDir) return;
     const cfg = configRef.current;
-    const prog = cfg.assoc.find((a) => a.ext === extOf(ce.name))?.program || undefined;
+    const prog = forcedProg || cfg.assoc.find((a) => a.ext === extOf(ce.name))?.program || undefined;
     try {
       await fsShellOpen(ce.path, prog);
     } catch {
@@ -799,11 +874,11 @@ function App() {
             return;
           case "v":
             e.preventDefault();
-            void openWithDefault(); // 파일 보기
+            void openWithDefault(configRef.current.winm?.prog.viewer || undefined); // 파일 보기
             return;
           case "g":
             e.preventDefault();
-            void openWithDefault(); // 파일 편집
+            void openWithDefault(configRef.current.winm?.prog.editor || undefined); // 파일 편집
             return;
           case "x":
             e.preventDefault();
@@ -920,7 +995,7 @@ function App() {
           return;
         case "Backspace":
           e.preventDefault();
-          panel.goParent();
+          if (configRef.current.winm?.proc.backspaceUp !== false) panel.goParent();
           return;
         case " ":
           e.preventDefault();
@@ -992,7 +1067,13 @@ function App() {
       // type-ahead search: any printable char without modifiers jumps to the
       // first entry starting with the typed text. WinM binds every action to
       // an Alt/Ctrl combo, so all letters are free for search.
-      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (
+        configRef.current.winm?.proc.quickFindExt !== false &&
+        e.key.length === 1 &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey
+      ) {
         panel.typeAhead(e.key);
       }
     },
@@ -1036,8 +1117,8 @@ function App() {
     mkdir: () => activePanel.setMkdirMode(true),
     props: () => openProps(),
     split: () => openSplitCombine(),
-    viewFile: () => void openWithDefault(),
-    editFile: () => void openWithDefault(),
+    viewFile: () => void openWithDefault(configRef.current.winm?.prog.viewer || undefined),
+    editFile: () => void openWithDefault(configRef.current.winm?.prog.editor || undefined),
     fileList: () => setDialog({ kind: "fileList" }),
     quit: () => quitApp(),
     selPattern: (select: boolean) => setDialog({ kind: "select", select }),
@@ -1078,6 +1159,11 @@ function App() {
     refresh: () => activePanel.refresh(),
     extConfig: () => openSettings(),
     setLangUi: (l) => setLangUi(l),
+    setThemeUi: (t) => {
+      const cfg = { ...configRef.current, theme: t };
+      applyConfig(cfg);
+      persistConfig(cfg);
+    },
     settings: () => openSettings(),
     help: () => setDialog({ kind: "help" }),
   };
@@ -1095,6 +1181,7 @@ function App() {
         sortAsc: activePanel.state.sortDir === "asc",
         filter: activePanel.state.filter,
         lang: uiLang === "en" ? "en" : "ko",
+        theme: config.theme === "light" ? "light" : "dark",
       }),
     [
       showToolbar,
@@ -1103,6 +1190,7 @@ function App() {
       showStatusbar,
       activePanel,
       uiLang,
+      config.theme,
     ],
   );
 
@@ -1179,7 +1267,7 @@ function App() {
       <header className="app-header">
         <MenuBar menus={menus} onAction={fireMenuItem} />
         {showToolbar && <Toolbar tools={tools} />}
-        {showPathbar && (
+        {showPathbar && (active === 0 ? pathbarL : pathbarR) && (
           <PathBar
             path={activePanel.state.path}
             filter={activePanel.state.filter}
@@ -1197,7 +1285,11 @@ function App() {
               onActivate={() => setActive(0)}
               label={t("panel.left")}
               extColors={config.customExtColors}
-              showColHeader={showColHeader}
+              extColorOn={config.winm?.color.extEnabled !== false}
+              showColHeader={showColHeader && colHeaderL}
+              colSep={config.winm?.panel1.columnSeparators !== false}
+              rowSep={config.winm?.panel1.rowSeparators !== false}
+              folderColor={config.winm?.disp.folderInFolderColor !== false}
               rowH={rowH}
             />
             <Panel
@@ -1206,14 +1298,24 @@ function App() {
               onActivate={() => setActive(1)}
               label={t("panel.right")}
               extColors={config.customExtColors}
-              showColHeader={showColHeader}
+              extColorOn={config.winm?.color.extEnabled !== false}
+              showColHeader={showColHeader && colHeaderR}
+              colSep={config.winm?.panel2.columnSeparators !== false}
+              rowSep={config.winm?.panel2.rowSeparators !== false}
+              folderColor={config.winm?.disp.folderInFolderColor !== false}
               rowH={rowH}
             />
           </>
         )}
       </main>
       <footer className="app-footer">
-        {showStatusbar && <StatusBar panel={activePanel} />}
+        {showStatusbar && (active === 0 ? statusbarL : statusbarR) && (
+          <StatusBar
+            panel={activePanel}
+            showDrive={config.winm?.disp.driveCapacity === true && config.winm?.disp.driveCapacityTarget === "상태줄"}
+            kbMb={config.winm?.disp.statusKbMb === true}
+          />
+        )}
         <div className="keybar">{keybarItems.map(kbItem)}</div>
       </footer>
 
@@ -1229,7 +1331,7 @@ function App() {
       {d?.kind === "delete" && (
         <DeleteDialog
           paths={d.paths}
-          defaultPermanent={!configRef.current.useTrash}
+          defaultPermanent={configRef.current.winm?.proc.deleteDefaultYes || !configRef.current.useTrash}
           onClose={() => setDialog(null)}
           onStart={startDelete}
         />
@@ -1246,7 +1348,11 @@ function App() {
         <ZipDialog
           sources={d.sources}
           initialDest={d.dest}
-          extPacker={config.extPacker || undefined}
+          extPacker={
+            config.winm?.arc.programs?.[0] && !config.winm.arc.programs[0].direct
+              ? config.winm.arc.programs[0].path || config.extPacker || undefined
+              : config.extPacker || undefined
+          }
           onClose={() => setDialog(null)}
           onStart={startZip}
           onExtPack={() => setDialog({ kind: "extPack", mode: "pack", sources: d.sources })}
@@ -1374,7 +1480,12 @@ function App() {
         />
       )}
       {d?.kind === "progress" && (
-        <ProgressDialog opId={d.opId} title={d.title} onClose={() => setDialog(null)} />
+        <ProgressDialog
+          opId={d.opId}
+          title={d.title}
+          showSpeed={configRef.current.winm?.proc.showCopySpeed !== false}
+          onClose={() => setDialog(null)}
+        />
       )}
       {d?.kind === "result" && (
         <ResultDialog title={d.title} summary={d.summary} onClose={() => setDialog(null)} />

@@ -19,7 +19,7 @@ function baseNameOf(path: string): string {
 const num = (n: number) => n.toLocaleString("en-US");
 
 /** App-level status bar (WinM classic): active panel stats + drive space + cursor info. */
-export default function StatusBar({ panel }: { panel: PanelApi }) {
+export default function StatusBar({ panel, showDrive = true, kbMb = false }: { panel: PanelApi; showDrive?: boolean; kbMb?: boolean }) {
   const t = useT();
   const { state } = panel;
   const [disk, setDisk] = useState<DiskSpace | null>(null);
@@ -56,12 +56,14 @@ export default function StatusBar({ panel }: { panel: PanelApi }) {
     <div className="statusbar">
       <span className="sb-icon">ⓘ</span>
       <span className="sb-left">
-        {t("status.counts", { d: dirs, f: files, b: num(bytes) })}
+        {kbMb
+          ? t("status.countsKbMb", { d: dirs, f: files, b: formatSize(bytes) })
+          : t("status.counts", { d: dirs, f: files, b: num(bytes) })}
         {state.selected.size > 0 && ` · ${t("panel.selected", { n: state.selected.size })}`}
         {state.filter && ` · ${t("panel.filter", { f: state.filter })}`}
       </span>
       <span className="sb-mid">
-        {disk && pct !== null && (
+        {showDrive && disk && pct !== null && (
           <>
             {t("status.driveFree", {
               v: volumeLabel(state.path),

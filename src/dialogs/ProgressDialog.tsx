@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Dialog from "../components/Dialog";
 import type { ProgressPayload } from "../lib/fs";
 import { fsCancel, onFsProgress } from "../lib/fs";
@@ -10,17 +10,29 @@ interface ProgressDialogProps {
   opId: string;
   title: string;
   onClose: () => void;
+  showSpeed?: boolean;
 }
 
-export default function ProgressDialog({ opId, title, onClose }: ProgressDialogProps) {
+export default function ProgressDialog({ opId, title, onClose, showSpeed = true }: ProgressDialogProps) {
   const t = useT();
   const [p, setP] = useState<ProgressPayload | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [speed, setSpeed] = useState<string | null>(null);
+  const prev = useRef<{ t: number; bytes: number } | null>(null);
 
   useEffect(() => {
     let unlisten: (() => void) | null = null;
     onFsProgress((payload) => {
-      if (payload.opId === opId) setP(payload);
+      if (payload.opId !== opId) return;
+      const now = Date.now();
+      const pr = prev.current;
+      if (pr && now - pr.t >= 400 && payload.bytesDone > pr.bytes) {
+        setSpeed(`${formatSize((payload.bytesDone - pr.bytes) / ((now - pr.t) / 1000))}/s`);
+        prev.current = { t: now, bytes: payload.bytesDone };
+      } else if (!pr) {
+        prev.current = { t: now, bytes: payload.bytesDone };
+      }
+      setP(payload);
     }).then((u) => {
       unlisten = u;
     });
@@ -56,6 +68,7 @@ export default function ProgressDialog({ opId, title, onClose }: ProgressDialogP
             {p ? t("dlg.filesProgress", { done: p.filesDone, total: p.filesTotal }) : t("dlg.preparing")}
           </span>
           <span>{p && p.bytesTotal > 0 ? `${formatSize(p.bytesDone)} / ${formatSize(p.bytesTotal)}` : ""}</span>
+          {showSpeed && speed && <span>{speed}</span>}
         </div>
         <div className="progress-file" title={p?.currentFile ?? ""}>
           {p?.currentFile ? baseName(p.currentFile) : "…"}

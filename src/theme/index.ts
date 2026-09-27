@@ -39,6 +39,46 @@ const COLOR_MAP: Record<string, string> = {
   DrvColor: "--accent",
 };
 
+/** Extra color items the settings window edits (css var -> .col key). */
+const EXTRA_COLOR_MAP: Record<string, string> = {
+  CursorColor: "--cursor-bg",
+  RowSepColor: "--rowsep",
+  ReadOnlyColor: "--ro-fg",
+  BigSizeColor: "--bigsize-fg",
+  TreeBackColor: "--mcd-bg",
+  TreeTextColor: "--mcd-fg",
+};
+
+function hexToRgb(hex: string): string | null {
+  const m = hex.trim().match(/^#([0-9a-fA-F]{6})$/);
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
+}
+
+/** Serialize theme vars + extension colors to a WinM .col file. */
+export function serializeCol(vars: Record<string, string>, extColors: ExtColors): string {
+  const varToKey: Record<string, string> = {};
+  for (const [k, v] of Object.entries(COLOR_MAP)) varToKey[v] = k;
+  for (const [k, v] of Object.entries(EXTRA_COLOR_MAP)) varToKey[v] = k;
+  const lines = ["[Color]"];
+  for (const [v, hex] of Object.entries(vars)) {
+    const key = varToKey[v];
+    const rgbStr = hexToRgb(hex);
+    if (key && rgbStr) lines.push(`${key}=${rgbStr}`);
+  }
+  lines.push("", "[ExtColor]");
+  const groups: Record<string, string[]> = {};
+  for (const [ext, hex] of Object.entries(extColors)) {
+    (groups[hex] ??= []).push(ext);
+  }
+  for (const [hex, exts] of Object.entries(groups)) {
+    const rgbStr = hexToRgb(hex);
+    if (rgbStr) lines.push(`${exts.sort().join(";")}=${rgbStr}`);
+  }
+  return lines.join("\r\n") + "\r\n";
+}
+
 export function parseCol(text: string): ParsedCol {
   const vars: ThemeVars = {};
   const extColors: ExtColors = {};
@@ -101,8 +141,13 @@ export function applyCustomVars(vars: ThemeVars): void {
   }
 }
 
-export function extColorFor(extColors: ExtColors | undefined, fileName: string, isDir: boolean): string | undefined {
-  if (isDir) return undefined;
+export function extColorFor(
+  extColors: ExtColors | undefined,
+  fileName: string,
+  isDir: boolean,
+  extColorOn = true,
+): string | undefined {
+  if (isDir || !extColorOn) return undefined;
   const dot = fileName.lastIndexOf(".");
   if (dot < 0) return undefined;
   const ext = fileName.slice(dot + 1).toLowerCase();

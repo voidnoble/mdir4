@@ -1,0 +1,419 @@
+/* ============ WinM-style settings modal (환경설정) ============
+ * Flat classic colors sampled from the WinM reference screenshots:
+ * face #f0f0f0, text #000000, fields #ffffff, checkmark blue #0f5cc4.
+ * This dialog always uses the classic light chrome, like WinM.
+ */
+
+.set-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  /* transparent: WinM modal dialogs don't dim the parent */
+  background: transparent;
+}
+
+.set-window {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  background: #f0f0f0;
+  color: #000000;
+  border: 1px solid #3c3c3c;
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+  font-size: 12px;
+  user-select: none;
+}
+
+.set-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 4px 8px;
+  background: #f0f0f0;
+  color: #000000;
+  font-weight: 700;
+  flex: none;
+}
+
+.set-x {
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  background: #f0f0f0;
+  color: #000000;
+  border: 1px solid;
+  border-color: #ffffff #7f7f7f #7f7f7f #ffffff;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.set-x:active {
+  border-color: #7f7f7f #ffffff #ffffff #7f7f7f;
+}
+
+/* ---- tab strip ---- */
+.set-tabs {
+  display: flex;
+  padding: 2px 6px 0 6px;
+  gap: 2px;
+  background: #f0f0f0;
+  flex: none;
+}
+
+.set-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #e9e9e9;
+  color: #000000;
+  border: 1px solid #a0a0a0;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.set-tab .ticon {
+  font-size: 12px;
+}
+
+.set-tab.active {
+  background: #f0f0f0;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 5px;
+  margin-bottom: -1px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.set-page {
+  background: #f0f0f0;
+  border: 1px solid #a0a0a0;
+  margin: 0 6px;
+  padding: 8px 10px;
+  min-height: 330px;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  flex: 1;
+  color: #000000;
+}
+
+/* ---- group box ---- */
+.set-group {
+  position: relative;
+  border: 2px groove #f0f0f0;
+  margin: 10px 0 4px 0;
+  padding: 8px 8px 8px 8px;
+}
+
+.set-glabel {
+  position: absolute;
+  top: -9px;
+  left: 8px;
+  background: #f0f0f0;
+  padding: 0 5px;
+  color: #000000;
+}
+
+/* ---- classic button ---- */
+.set-btn {
+  background: #f0f0f0;
+  color: #000000;
+  border: 1px solid;
+  border-color: #ffffff #7f7f7f #7f7f7f #ffffff;
+  padding: 4px 16px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.set-btn:active:not(:disabled) {
+  border-color: #7f7f7f #ffffff #ffffff #7f7f7f;
+}
+
+.set-btn:disabled {
+  color: #808080;
+  cursor: default;
+}
+
+.set-btn.wide {
+  min-width: 150px;
+}
+
+/* ---- checkbox (custom, blue check) ---- */
+.set-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #000000;
+  padding: 2px 0;
+  /* JSX strips newline whitespace between siblings, so inline checks would
+     otherwise sit flush against each other */
+  margin-right: 12px;
+}
+
+.set-check .box {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  background: #ffffff;
+  border: 1px solid #7f7f7f;
+  box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.12);
+  position: relative;
+}
+
+.set-check.on .box::after {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 0.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #0f5cc4;
+  border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
+}
+
+.set-check.disabled {
+  color: #808080;
+  cursor: default;
+}
+
+.set-check.disabled .box {
+  background: #f0f0f0;
+}
+
+/* ---- radio (custom) ---- */
+.set-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #000000;
+  padding: 2px 0;
+  margin-right: 12px;
+}
+
+.set-radio .dot {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #7f7f7f;
+  box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.12);
+  position: relative;
+}
+
+.set-radio.on .dot::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #000000;
+}
+
+.set-radio.disabled {
+  color: #808080;
+  cursor: default;
+}
+
+/* ---- select (classic dropdown) ---- */
+.set-selectwrap {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.set-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #7f7f7f;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  padding: 3px 24px 3px 6px;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.set-selectwrap::after {
+  content: "";
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  bottom: 1px;
+  width: 17px;
+  background: #f0f0f0;
+  border-left: 1px solid #d4d0c8;
+  pointer-events: none;
+}
+
+.set-selectwrap::before {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  margin-top: -2px;
+  border: 4px solid transparent;
+  border-top: 5px solid #000000;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.set-select:disabled {
+  background: #f0f0f0;
+  color: #808080;
+}
+
+/* ---- text input ---- */
+.set-input {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #7f7f7f;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  padding: 3px 6px;
+}
+
+.set-input:disabled {
+  background: #f0f0f0;
+  color: #808080;
+}
+
+/* ---- list box ---- */
+.set-list {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #7f7f7f;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.set-list .lrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.set-list .lrow.sel {
+  background: #0a246a;
+  color: #ffffff;
+}
+
+.set-sw {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 1px solid #7f7f7f;
+}
+
+/* ---- layout helpers ---- */
+.set-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  flex-wrap: wrap;
+}
+
+.set-cols {
+  display: flex;
+  gap: 12px;
+}
+
+.set-cols > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.set-hr {
+  border: none;
+  border-top: 1px solid #d4d0c8;
+  margin: 8px 0;
+}
+
+.set-note {
+  color: #000000;
+  padding: 2px 0;
+}
+
+/* ---- bottom buttons ---- */
+.set-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 6px 6px 6px;
+  background: #f0f0f0;
+  flex: none;
+}
+
+.set-bottom .right {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- nested sub-dialog ---- */
+.set-suboverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.set-subwindow {
+  background: #f0f0f0;
+  color: #000000;
+  border: 1px solid #3c3c3c;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+  min-width: 340px;
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  flex-direction: column;
+}
+
+.set-subbody {
+  padding: 10px 12px;
+  overflow-y: auto;
+}
+
+/* color tab previews */
+.set-preview {
+  border: 1px solid #7f7f7f;
+  overflow: hidden;
+  font-size: 11px;
+}
+
+.set-focus {
+  outline: 1px dotted #000000;
+  outline-offset: 1px;
+}
+
+.set-tab:focus-visible,
+.set-btn:focus-visible,
+.set-check:focus-visible,
+.set-radio:focus-visible {
+  outline: 1px dotted #000000;
+  outline-offset: 1px;
+}

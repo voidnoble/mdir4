@@ -26,6 +26,12 @@
   --sel-name: #ffff00;
   --sel-name-cursor: #ffff00;
   --dir-fg: #ff0000;
+  --hidden-fg: #808080;
+  --ro-fg: #00c000;
+  --bigsize-fg: #ff8c00;
+  --rowsep: #3a3a3a;
+  --mcd-bg: #000000;
+  --mcd-fg: #d8d8d8;
   --info: #8cdcfe;
   --danger: #a4262c;
   --danger-hover: #c02e35;
@@ -72,6 +78,12 @@
   --sel-name: #8a6d00;
   --sel-name-cursor: #7a5f00;
   --dir-fg: #b30000;
+  --hidden-fg: #909090;
+  --ro-fg: #007a00;
+  --bigsize-fg: #b35c00;
+  --rowsep: #c8c8c8;
+  --mcd-bg: #ffffff;
+  --mcd-fg: #1e1e1e;
   --info: #0b5a8a;
   --danger: #a4262c;
   --danger-hover: #c02e35;
@@ -582,6 +594,29 @@ body,
   color: var(--cursor-fg-dim);
 }
 
+/* ---------- separators (settings: 항목 구분선 / 열 구분선) ---------- */
+
+.pane:not(.norowsep) .frow {
+  border-bottom: 1px dotted var(--rowsep);
+}
+
+.pane:not(.nocolsep) .frow .c-ext,
+.pane:not(.nocolsep) .frow .c-size,
+.pane:not(.nocolsep) .frow .c-date,
+.pane:not(.nocolsep) .col-header .c-ext,
+.pane:not(.nocolsep) .col-header .c-size,
+.pane:not(.nocolsep) .col-header .c-date {
+  border-left: 1px dotted var(--rowsep);
+  padding-left: 6px;
+}
+
+/* ---------- fonts (settings: 폰트선택) ---------- */
+
+.pane {
+  font-family: var(--filewin-font, inherit);
+  font-size: var(--filewin-size, inherit);
+}
+
 /* ---------- keybar (inside app footer) ---------- */
 
 .keybar {
@@ -896,7 +931,10 @@ body,
   max-height: 320px;
   overflow-y: auto;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--mcd-bg, var(--bg));
+  color: var(--mcd-fg, var(--fg));
+  font-family: var(--mcd-font, inherit);
+  font-size: var(--mcd-size, inherit);
   outline: none;
 }
 .tnode {

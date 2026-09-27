@@ -76,6 +76,7 @@ export interface WinMActions {
   refresh(): void;
   extConfig(): void;
   setLangUi(l: "ko" | "en"): void;
+  setThemeUi(t: "dark" | "light"): void;
   settings(): void;
   help(): void;
 }
@@ -90,6 +91,7 @@ export interface WinMState {
   sortAsc: boolean;
   filter: string;
   lang: "ko" | "en";
+  theme: "dark" | "light";
 }
 
 export const PROG_FILTER = "*.exe;*.com;*.bat";
@@ -252,6 +254,13 @@ export function buildWinMMenu(st: WinMState): WinMTop[] {
           sc: "Shift+Ctrl+S",
           checked: st.statusbar,
           act: "toggleStatusbar",
+        }),
+        it("theme", "wm.view.theme", {
+          mnemonic: "T",
+          sub: [
+            it("themedark", "wm.view.themeDark", { checked: st.theme === "dark", act: "setThemeUi", args: ["dark"] }),
+            it("themelight", "wm.view.themeLight", { checked: st.theme === "light", act: "setThemeUi", args: ["light"] }),
+          ],
         }),
         it("foldertree", "wm.view.foldertree", { mnemonic: "F", sc: "Shift+Ctrl+F", disabled: true }),
         sep("s2"),

@@ -21,7 +21,11 @@ interface PanelProps {
   onActivate: () => void;
   label: string;
   extColors?: ExtColors;
+  extColorOn?: boolean;
   showColHeader?: boolean;
+  colSep?: boolean;
+  rowSep?: boolean;
+  folderColor?: boolean;
   rowH?: number;
 }
 
@@ -31,7 +35,11 @@ export default function Panel({
   onActivate,
   label,
   extColors,
+  extColorOn = true,
   showColHeader = true,
+  colSep = true,
+  rowSep = true,
+  folderColor = true,
   rowH = ROW_H,
 }: PanelProps) {
   const t = useT();
@@ -82,7 +90,17 @@ export default function Panel({
     const isHit = isCursor && flashOn;
     // On the cursor bar (active or inactive) the row uses the bar's text color,
     // so per-extension colors are suppressed there (WinM classic behavior).
-    const nameColor = isCursor ? undefined : extColorFor(extColors, e.name, e.isDir);
+    // Off the cursor bar, item name colors follow the settings: hidden >
+    // readonly > big-file > folder color / extension color (WinM classic).
+    const BIG = 10 * 1024 * 1024;
+    let nameColor: string | undefined;
+    if (!isCursor) {
+      if (e.hidden) nameColor = "var(--hidden-fg)";
+      else if (e.readonly && !e.isDir) nameColor = "var(--ro-fg)";
+      else if (!e.isDir && e.size >= BIG) nameColor = "var(--bigsize-fg)";
+      else if (e.isDir) nameColor = folderColor ? undefined : "var(--fg)";
+      else nameColor = extColorFor(extColors, e.name, e.isDir, extColorOn);
+    }
     // Type-ahead match: the bar takes the item's own color — the directory
     // color for folders, the extension color for files — instead of a fixed one.
     let hitStyle: { backgroundColor: string; color: string } | undefined;
@@ -119,7 +137,7 @@ export default function Panel({
 
   return (
     <section
-      className={`pane${active ? " active" : ""}`}
+      className={`pane${active ? " active" : ""}${colSep ? "" : " nocolsep"}${rowSep ? "" : " norowsep"}`}
       onMouseDown={onActivate}
       aria-label={label}
     >
