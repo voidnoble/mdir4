@@ -134,7 +134,7 @@ export default function Panel({
         }}
         onDoubleClick={() => api.enterAtCursor()}
       >
-        <span className="sel-mark">{isSelected ? "▶" : ""}</span>
+        {isSelected ? <span className="sel-mark" /> : <span className="c-mark" />}
         <span className="c-icon">{e.isDir ? "📁" : fileIcon(e.name)}</span>
         <span className="c-name" title={e.path} style={nameColor ? { color: nameColor } : undefined}>
           {baseName}

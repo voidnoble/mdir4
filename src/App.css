@@ -398,7 +398,7 @@ body,
 
 .col-header {
   display: grid;
-  grid-template-columns: 12.5px 19px 1fr 64px 90px 130px;
+  grid-template-columns: 11.5px 19px 1fr 64px 90px 130px;
   padding: 0;
   font-size: 11px;
   color: #000000;
@@ -533,7 +533,7 @@ body,
 
 .frow {
   display: grid;
-  grid-template-columns: 12.5px 19px 1fr 64px 90px 130px;
+  grid-template-columns: 11.5px 19px 1fr 64px 90px 130px;
   align-items: center;
   height: 100%;
   padding: 0 8px;
@@ -580,10 +580,19 @@ body,
 .frow.selected {
   background: var(--sel-bg);
 }
+/* Selection marker: CSS triangle (not the ▶ character — its left side bearing
+   varies by font and pushed the visible glyph right). Pinned 1px from the
+   cell's left edge, 1.5px gap on the right; color follows `color`. */
 .frow .sel-mark {
-  text-align: left;
-  padding-left: 1px;
-  padding-right: 1.5px;
+  width: 0;
+  height: 0;
+  justify-self: start;
+  align-self: center;
+  margin-left: 1px;
+  margin-right: 1.5px;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 9px solid currentColor;
 }
 .frow.selected .sel-mark {
   color: var(--sel-mark);
