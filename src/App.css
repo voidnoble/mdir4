@@ -581,7 +581,8 @@ body,
   background: var(--sel-bg);
 }
 .frow .sel-mark {
-  text-align: center;
+  text-align: left;
+  padding-left: 1px;
 }
 .frow.selected .sel-mark {
   color: var(--sel-mark);
@@ -630,6 +631,7 @@ body,
 
 .frow .c-icon {
   text-align: center;
+  padding-inline: 1px;
 }
 
 .frow .c-name {
