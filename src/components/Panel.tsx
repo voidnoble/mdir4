@@ -134,7 +134,7 @@ export default function Panel({
         }}
         onDoubleClick={() => api.enterAtCursor()}
       >
-        {isSelected && <span className="sel-mark">▶</span>}
+        <span className="sel-mark">{isSelected ? "▶" : ""}</span>
         <span className="c-icon">{e.isDir ? "📁" : fileIcon(e.name)}</span>
         <span className="c-name" title={e.path} style={nameColor ? { color: nameColor } : undefined}>
           {baseName}
@@ -183,6 +183,7 @@ export default function Panel({
       )}
 
       {showColHeader && <div className="col-header">
+        <span className="c-mark" />
         <span className="c-icon" />
         <button
           className={`c-name sort-hdr${state.sortKey === "name" ? " sorted" : ""}`}

@@ -398,7 +398,7 @@ body,
 
 .col-header {
   display: grid;
-  grid-template-columns: 28px 1fr 64px 90px 130px;
+  grid-template-columns: 20px 28px 1fr 64px 90px 130px;
   padding: 0;
   font-size: 11px;
   color: #000000;
@@ -533,7 +533,7 @@ body,
 
 .frow {
   display: grid;
-  grid-template-columns: 28px 1fr 64px 90px 130px;
+  grid-template-columns: 20px 28px 1fr 64px 90px 130px;
   align-items: center;
   height: 100%;
   padding: 0 8px;
@@ -578,7 +578,6 @@ body,
 /* Selected rows (WinM): gray background, ▶ marker column at the very front with
    the icon kept next to it, dimmed text colors. */
 .frow.selected {
-  grid-template-columns: 20px 28px 1fr 64px 90px 130px;
   background: var(--sel-bg);
 }
 .frow .sel-mark {
