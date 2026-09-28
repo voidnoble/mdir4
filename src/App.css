@@ -536,7 +536,10 @@ body,
   grid-template-columns: 11.5px 19px 1fr 64px 90px 130px;
   align-items: center;
   height: 100%;
-  padding: 0 8px;
+  /* No left padding: the marker column starts at the row's left edge so the
+     selection triangle sits 1px from it. (Also aligns rows with the header,
+     which has no left padding.) */
+  padding: 0 8px 0 0;
   cursor: default;
   white-space: nowrap;
 }
