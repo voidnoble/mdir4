@@ -651,7 +651,6 @@ body,
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 8px;
-  padding-left: 5px;
 }
 
 .frow .c-ext {

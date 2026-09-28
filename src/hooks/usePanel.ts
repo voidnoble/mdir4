@@ -416,21 +416,27 @@ export function usePanel(initialPath: string): PanelApi {
       if (searchTimer.current) window.clearTimeout(searchTimer.current);
       const prevBuf = s.searchBuf;
       const buf = (prevBuf + ch).toLowerCase();
-      // repeated same char (e.g. "bb") cycles through matches for that char
+      // repeated same char (e.g. "jj") cycles through matches for that char
       const cycling = buf.length > 1 && buf.split("").every((c) => c === buf[0]);
       const needle = cycling ? buf[0] : buf;
-      // fresh keystroke matching the current item's first char: jump to the NEXT
-      // match (WinM: typing "w" again after a pause cycles through "w" items)
       const cur = s.entries[s.cursor];
-      const freshCycle =
-        !cycling && !prevBuf && !!cur && cur.name.toLowerCase().startsWith(ch.toLowerCase());
-      const start = cycling || freshCycle ? s.cursor + 1 : 0;
       let idx = -1;
-      for (let k = 0; k < s.entries.length; k++) {
-        const i = (start + k) % s.entries.length;
-        if (s.entries[i].name.toLowerCase().startsWith(needle)) {
-          idx = i;
-          break;
+      if (!cycling && cur && cur.name.toLowerCase().startsWith(needle)) {
+        // The current item already matches the typed text: stay put.
+        // (Previously a fresh keystroke matching the current item jumped to
+        // the NEXT match, which teleported the cursor away in the middle of
+        // typing e.g. "je" while sitting on the 3rd "je" item.)
+        idx = s.cursor;
+      } else {
+        // Otherwise search forward from the cursor, wrapping around —
+        // never jump back to the top of the list unexpectedly.
+        const start = s.cursor + 1;
+        for (let k = 0; k < s.entries.length; k++) {
+          const i = (start + k) % s.entries.length;
+          if (s.entries[i].name.toLowerCase().startsWith(needle)) {
+            idx = i;
+            break;
+          }
         }
       }
       searchTimer.current = window.setTimeout(() => {
