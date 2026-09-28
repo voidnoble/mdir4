@@ -80,6 +80,13 @@ cd src-tauri && cargo check # Rust 컴파일 검증
 > [!NOTE]
 > macOS 빌드는 미서명 상태입니다. 처음 실행 시 Gatekeeper 경고가 나올 수 있으며,
 > `시스템 설정 → 개인정보 보호 및 보안`에서 허용하면 실행됩니다.
+>
+> "손상되었기 때문에 열 수 없습니다" 등의 오류가 나오는 경우, 터미널 앱을 열고
+> 아래 명령을 실행하면 quarantine 속성이 제거되어 실행할 수 있습니다.
+>
+> ```sh
+> xattr -dr com.apple.quarantine /Applications/mdir4.app
+> ```
 
 ## 구조
 
