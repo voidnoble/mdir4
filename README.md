@@ -1,3 +1,5 @@
+[English](README.en.md) | 한국어
+
 # Mdir4
 
 Keyboard-first 듀얼 패널 파일 관리자 (Windows / macOS / Linux).
