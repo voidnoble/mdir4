@@ -22,8 +22,11 @@
   --cursor-fg-dim: #ffc9c9;
   --cursor-dim-bg: #7a0000;
   --cursor-dim-fg: #ffffff;
-  --sel-name: #f061ef;
-  --sel-name-cursor: #f061ef;
+  --sel-name: #406060;
+  --sel-name-cursor: #ffffff;
+  --sel-bg: #202020;
+  --sel-mark: #f0f0f0;
+  --sel-dim: #707070;
   --dir-fg: #ff0000;
   --hidden-fg: #808080;
   --ro-fg: #00c000;
@@ -73,8 +76,11 @@
   --cursor-fg-dim: #1a4a6a;
   --cursor-dim-bg: #e8b4b4;
   --cursor-dim-fg: #1e1e1e;
-  --sel-name: #a800a8;
-  --sel-name-cursor: #a800a8;
+  --sel-name: #2e4e4e;
+  --sel-name-cursor: #1e1e1e;
+  --sel-bg: #c6c6c6;
+  --sel-mark: #333333;
+  --sel-dim: #595959;
   --dir-fg: #b30000;
   --hidden-fg: #909090;
   --ro-fg: #007a00;
@@ -569,24 +575,43 @@ body,
   color: var(--dir-fg);
 }
 
-.frow.selected .c-name {
-  color: var(--sel-name);
+/* Selected rows (WinM): gray background, ▶ marker column at the very front with
+   the icon kept next to it, dimmed text colors. */
+.frow.selected {
+  grid-template-columns: 20px 28px 1fr 64px 90px 130px;
+  background: var(--sel-bg);
 }
-
-/* Selection marker (WinM): when a row is selected its icon is replaced by a
-   sideways triangle, always the same color as the selected name; deselecting
-   restores the original icon. */
 .frow .sel-mark {
   text-align: center;
 }
 .frow.selected .sel-mark {
+  color: var(--sel-mark);
+}
+.frow.selected .c-name {
   color: var(--sel-name);
 }
+.frow.selected .c-ext,
+.frow.selected .c-size,
+.frow.selected .c-date {
+  color: var(--sel-dim);
+}
+
+/* The cursor bars stay visible on top of the selection background. */
+.frow.cursor.selected {
+  background: var(--cursor-bg);
+}
+.frow.cursor.selected .c-name,
 .frow.cursor.selected .sel-mark {
   color: var(--sel-name-cursor);
 }
-.frow.cursor-dim.selected .sel-mark {
+.frow.cursor-dim.selected {
+  background: var(--cursor-dim-bg);
+}
+.frow.cursor-dim.selected .c-name {
   color: var(--sel-name);
+}
+.frow.cursor-dim.selected .sel-mark {
+  color: var(--sel-mark);
 }
 
 .frow.cursor .c-name {
@@ -602,14 +627,6 @@ body,
 .frow.cursor-dim .c-date {
   color: var(--cursor-dim-fg);
   opacity: 0.8;
-}
-
-.frow.cursor.selected .c-name {
-  color: var(--sel-name-cursor);
-}
-
-.frow.cursor-dim.selected .c-name {
-  color: var(--sel-name);
 }
 
 .frow .c-icon {
