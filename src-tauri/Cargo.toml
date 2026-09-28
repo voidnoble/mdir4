@@ -1,6 +1,6 @@
 [package]
 name = "mdir4"
-version = "1.0.0"
+version = "0.5.0"
 description = "Mdir4 — keyboard-first dual-pane file manager for Windows, macOS and Linux"
 authors = ["Mdir4"]
 license = "GPL-3.0-only"
