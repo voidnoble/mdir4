@@ -127,7 +127,7 @@ export default function SettingsDialog({ config, onClose, onSave }: SettingsDial
   const [tab, setTab] = useState<TabId>("filewin");
   const [sub, setSub] = useState<React.ReactNode | null>(null);
   const [pathsCleared, setPathsCleared] = useState(false);
-  const winRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const colInput = useRef<HTMLInputElement>(null);
   const cfgInput = useRef<HTMLInputElement>(null);
   const subRef = useRef(sub);
@@ -136,11 +136,19 @@ export default function SettingsDialog({ config, onClose, onSave }: SettingsDial
   const closeSub = () => setSub(null);
   const openSub = (node: React.ReactNode) => setSub(node);
 
-  /* focus trap + ESC: the parent window is not clickable (overlay) and not
-     focusable (Tab cycles inside this modal). */
+  /* Native dialog modal with focus trap + ESC handling */
   useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    // Open as modal
+    if (!dialog.open) {
+      dialog.showModal();
+    }
+
     const h = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        e.preventDefault();
         e.stopPropagation();
         if (subRef.current) setSub(null);
         else onClose();
@@ -153,7 +161,7 @@ export default function SettingsDialog({ config, onClose, onSave }: SettingsDial
         return;
       }
       if (e.key === "Tab") {
-        const root = winRef.current;
+        const root = dialog;
         if (!root) return;
         const scope = (root.querySelector(".set-subwindow") as HTMLElement) ?? root;
         const els = [...scope.querySelectorAll<HTMLElement>(
@@ -173,12 +181,18 @@ export default function SettingsDialog({ config, onClose, onSave }: SettingsDial
       }
     };
     window.addEventListener("keydown", h, true);
-    return () => window.removeEventListener("keydown", h, true);
+
+    return () => {
+      window.removeEventListener("keydown", h, true);
+      if (dialog.open) {
+        dialog.close();
+      }
+    };
   }, [onClose]);
 
   // initial focus: active tab
   useEffect(() => {
-    winRef.current?.querySelector<HTMLButtonElement>(".set-tab.active")?.focus();
+    dialogRef.current?.querySelector<HTMLButtonElement>(".set-tab.active")?.focus();
   }, []);
 
   const pickPath = (initial: string, cb: (p: string) => void) =>
@@ -278,8 +292,8 @@ export default function SettingsDialog({ config, onClose, onSave }: SettingsDial
   const Active = TABS.find((t) => t.id === tab)!.comp;
 
   return (
-    <div className="set-overlay">
-      <div ref={winRef} className="set-window" role="dialog" aria-label="환경설정">
+    <>
+      <dialog ref={dialogRef} className="set-window" aria-label="환경설정">
         <div className="set-titlebar">
           <span>환경설정</span>
           <button className="set-x" onClick={onClose} aria-label="닫기">✕</button>
@@ -314,7 +328,7 @@ export default function SettingsDialog({ config, onClose, onSave }: SettingsDial
             {sub}
           </div>
         )}
-      </div>
+      </dialog>
       <input
         ref={colInput}
         type="file"
@@ -337,6 +351,6 @@ export default function SettingsDialog({ config, onClose, onSave }: SettingsDial
           e.target.value = "";
         }}
       />
-    </div>
+    </>
   );
 }

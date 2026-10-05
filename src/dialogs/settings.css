@@ -2,21 +2,11 @@
  * Flat classic colors sampled from the WinM reference screenshots:
  * face #f0f0f0, text #000000, fields #ffffff, checkmark blue #0f5cc4.
  * This dialog always uses the classic light chrome, like WinM.
+ * Now uses native <dialog> element with showModal().
  */
 
-.set-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  /* transparent: WinM modal dialogs don't dim the parent */
-  background: transparent;
-}
-
 .set-window {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  padding: 0;
   width: 600px;
   max-width: calc(100vw - 40px);
   max-height: calc(100vh - 60px);
@@ -28,6 +18,11 @@
   box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
   font-size: 12px;
   user-select: none;
+}
+
+/* Transparent backdrop like WinM (no dimming) */
+.set-window::backdrop {
+  background: transparent;
 }
 
 .set-titlebar {
