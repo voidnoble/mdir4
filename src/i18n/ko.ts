@@ -441,4 +441,6 @@ export const ko: Record<string, string> = {
   "wm.help.email": "전자우편",
   "wm.help.update": "WinM 업데이트",
   "wm.help.about": "정보",
+  "about.homepage": "홈페이지 접속",
+  "about.version": "버전 {version}",
 };

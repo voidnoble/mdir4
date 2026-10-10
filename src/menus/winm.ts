@@ -80,6 +80,7 @@ export interface WinMActions {
   setThemeUi(t: "dark" | "light"): void;
   settings(): void;
   help(): void;
+  about(): void;
 }
 
 export interface WinMState {
@@ -397,7 +398,7 @@ export function buildWinMMenu(st: WinMState): WinMTop[] {
         sep("s2"),
         it("update", "wm.help.update", { disabled: true }),
         sep("s3"),
-        it("about", "wm.help.about", { mnemonic: "A", act: "help" }),
+        it("about", "wm.help.about", { mnemonic: "A", act: "about" }),
       ],
     },
   ];

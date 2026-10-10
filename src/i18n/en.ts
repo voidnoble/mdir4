@@ -441,4 +441,6 @@ export const en: Record<string, string> = {
   "wm.help.email": "E-mail",
   "wm.help.update": "WinM update",
   "wm.help.about": "About",
+  "about.homepage": "Visit Homepage",
+  "about.version": "Version {version}",
 };

@@ -51,8 +51,14 @@ fn combine_detects_crc_mismatch() {
     bad[10] ^= 0xFF;
     fs::write(&parts[1], &bad).unwrap();
 
-    let err = combine_files(&parts[0], &dir.join("bad.bin"), "op2", &cancel, &no_progress)
-        .expect_err("expected CRC mismatch");
+    let err = combine_files(
+        &parts[0],
+        &dir.join("bad.bin"),
+        "op2",
+        &cancel,
+        &no_progress,
+    )
+    .expect_err("expected CRC mismatch");
     assert!(err.message.contains("CRC"), "unexpected: {}", err.message);
 }
 
@@ -79,7 +85,12 @@ fn tree_children_and_roots() {
 
     fs::create_dir(dir.join("alpha").join("nested")).unwrap();
     let kids = tree_children(&dir).unwrap();
-    assert!(kids.iter().find(|n| n.name == "alpha").unwrap().has_children);
+    assert!(
+        kids.iter()
+            .find(|n| n.name == "alpha")
+            .unwrap()
+            .has_children
+    );
 
     assert!(!roots().is_empty());
 }

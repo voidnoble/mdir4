@@ -170,29 +170,41 @@ pub fn zip_create(
             if meta.is_dir() {
                 for entry in WalkDir::new(src).follow_links(false).min_depth(1) {
                     check_cancel(cancel)?;
-                    let entry = entry.map_err(|e| {
-                        FsError::internal(format!("스캔 실패: {e}"))
-                    })?;
-                    let rel = entry.path().strip_prefix(src).map_err(|_| {
-                        FsError::internal("상대 경로 계산 실패")
-                    })?;
-                    let arc_name = format!(
-                        "{}/{}",
-                        root_name,
-                        rel.to_string_lossy().replace('\\', "/")
-                    );
+                    let entry = entry.map_err(|e| FsError::internal(format!("스캔 실패: {e}")))?;
+                    let rel = entry
+                        .path()
+                        .strip_prefix(src)
+                        .map_err(|_| FsError::internal("상대 경로 계산 실패"))?;
+                    let arc_name =
+                        format!("{}/{}", root_name, rel.to_string_lossy().replace('\\', "/"));
                     let ft = entry.file_type();
                     if ft.is_dir() {
                         writer
                             .add_directory(format!("{arc_name}/"), options)
                             .map_err(|e| FsError::internal(format!("zip 쓰기 실패: {e}")))?;
                     } else if ft.is_file() {
-                        write_file_entry(&mut writer, entry.path(), &arc_name, options, &mut buf, &mut ctx, cancel)?;
+                        write_file_entry(
+                            &mut writer,
+                            entry.path(),
+                            &arc_name,
+                            options,
+                            &mut buf,
+                            &mut ctx,
+                            cancel,
+                        )?;
                     }
                     ctx.emit(&arc_name, false);
                 }
             } else if meta.is_file() {
-                write_file_entry(&mut writer, src, &root_name, options, &mut buf, &mut ctx, cancel)?;
+                write_file_entry(
+                    &mut writer,
+                    src,
+                    &root_name,
+                    options,
+                    &mut buf,
+                    &mut ctx,
+                    cancel,
+                )?;
                 ctx.emit(&root_name, false);
             }
         }
@@ -375,7 +387,9 @@ pub fn zip_extract(
                 if cancel.load(Ordering::Relaxed) {
                     return Err(FsError::cancelled());
                 }
-                let n = entry.read(&mut buf).map_err(|e| FsError::internal(format!("zip 읽기 실패: {e}")))?;
+                let n = entry
+                    .read(&mut buf)
+                    .map_err(|e| FsError::internal(format!("zip 읽기 실패: {e}")))?;
                 if n == 0 {
                     break;
                 }
@@ -470,7 +484,14 @@ pub async fn fs_zip_extract(
         let progress = move |p: ProgressPayload| {
             let _ = app2.emit("mdir4://fs-progress", p);
         };
-        zip_extract(Path::new(&zip_path), Path::new(&dest_dir), policy, &oid, &cancel, &progress)
+        zip_extract(
+            Path::new(&zip_path),
+            Path::new(&dest_dir),
+            policy,
+            &oid,
+            &cancel,
+            &progress,
+        )
     })
     .await
     .map_err(|_| FsError::internal("unzip task panicked"))?;

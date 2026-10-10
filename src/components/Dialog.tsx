@@ -6,12 +6,25 @@ interface DialogProps {
   onClose: () => void;
   children: React.ReactNode;
   wide?: boolean;
+  className?: string;
+  closeButton?: boolean;
+  closeOnBackdrop?: boolean;
 }
 
 /** Modal shell using native <dialog> element with showModal(). ESC to close. */
-export default function Dialog({ title, onClose, children, wide }: DialogProps) {
+export default function Dialog({
+  title,
+  onClose,
+  children,
+  wide,
+  className,
+  closeButton = true,
+  closeOnBackdrop = true,
+}: DialogProps) {
   const t = useT();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -22,28 +35,22 @@ export default function Dialog({ title, onClose, children, wide }: DialogProps) 
       dialog.showModal();
     }
 
-    // Handle ESC and native close
-    const handleClose = (e: Event) => {
-      e.preventDefault();
-      onClose();
-    };
-
+    // Handle ESC. Ignore native close events: cleanup closes the element, and
+    // browsers may dispatch that event after the next effect setup has reopened it.
     const handleCancel = (e: Event) => {
       e.preventDefault();
-      onClose();
+      onCloseRef.current();
     };
 
-    dialog.addEventListener("close", handleClose);
     dialog.addEventListener("cancel", handleCancel);
 
     return () => {
-      dialog.removeEventListener("close", handleClose);
       dialog.removeEventListener("cancel", handleCancel);
       if (dialog.open) {
         dialog.close();
       }
     };
-  }, [onClose]);
+  }, []);
 
   // Close on backdrop click
   const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
@@ -57,24 +64,26 @@ export default function Dialog({ title, onClose, children, wide }: DialogProps) 
       rect.left <= e.clientX &&
       e.clientX <= rect.left + rect.width;
 
-    if (!isInDialog) {
-      onClose();
+    if (!isInDialog && closeOnBackdrop) {
+      onCloseRef.current();
     }
   };
 
   return (
     <dialog
       ref={dialogRef}
-      className={`dlg${wide ? " wide" : ""}`}
+      className={`dlg${wide ? " wide" : ""}${className ? ` ${className}` : ""}`}
       onClick={handleBackdropClick}
       aria-label={title}
     >
       <div className="dlg-content" onClick={(e) => e.stopPropagation()}>
         <div className="dlg-title">
           <span>{title}</span>
-          <button className="dlg-x" onClick={onClose} aria-label={t("dlg.close")}>
-            ✕
-          </button>
+          {closeButton && (
+            <button className="dlg-x" onClick={onClose} aria-label={t("dlg.close")}>
+              ✕
+            </button>
+          )}
         </div>
         <div className="dlg-body">{children}</div>
       </div>

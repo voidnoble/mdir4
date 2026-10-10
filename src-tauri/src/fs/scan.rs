@@ -39,10 +39,7 @@ fn entry_from(de: &fs::DirEntry) -> Result<Entry, FsError> {
         de.metadata().ok()
     };
 
-    let name = de
-        .file_name()
-        .to_string_lossy()
-        .into_owned();
+    let name = de.file_name().to_string_lossy().into_owned();
 
     let (is_dir, size, modified_ms, readonly) = match md {
         Some(m) => (

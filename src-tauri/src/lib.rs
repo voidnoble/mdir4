@@ -37,14 +37,16 @@ pub fn run() {
             props::fs_shell_open,
             props::fs_write_text,
             props::fs_exec,
+            font::font_select,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
-pub mod fs;
 pub mod archive;
 pub mod config;
-pub mod tree;
-pub mod split;
+pub mod font;
+pub mod fs;
 pub mod props;
+pub mod split;
+pub mod tree;

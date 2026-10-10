@@ -75,7 +75,9 @@ pub struct FileProps {
 }
 
 fn unix_secs(t: std::time::SystemTime) -> Option<i64> {
-    t.duration_since(std::time::UNIX_EPOCH).ok().map(|d| d.as_secs() as i64)
+    t.duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .map(|d| d.as_secs() as i64)
 }
 
 pub fn file_props(path: &Path) -> FsResult<FileProps> {
@@ -285,7 +287,9 @@ pub fn run_exec(program: &str, args: &[String], cwd: &str) -> FsResult<ExecResul
     if !cwd.trim().is_empty() {
         cmd.current_dir(cwd);
     }
-    let out = cmd.output().map_err(|e| FsError::from_io(e, Path::new(prog)))?;
+    let out = cmd
+        .output()
+        .map_err(|e| FsError::from_io(e, Path::new(prog)))?;
     Ok(ExecResult {
         code: out.status.code().unwrap_or(-1),
         stdout: String::from_utf8_lossy(&out.stdout).into_owned(),

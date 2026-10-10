@@ -1,6 +1,7 @@
 /** Settings tabs 01-03: 파일창, 표시, 처리 (WinM reference screenshots). */
 import React from "react";
 import type { WinmSettings, WinmPanelSettings, ExtAssoc } from "../../lib/config";
+import { selectFont } from "../../lib/font";
 import { WinCheck, WinSelect, WinInput, WinButton, WinGroup } from "./controls";
 
 export interface TabEnv {
@@ -41,17 +42,22 @@ function PanelBlock({
         <WinCheck checked={p.showStatusBar} onChange={(v) => u("showStatusBar", v)}>상태표시줄</WinCheck>
       </div>
       <WinGroup label="컬럼">
-        <div className="set-row">
+        <div className="set-pair-grid">
           <WinSelect value={p.columnMode} onChange={(v) => u("columnMode", v)}
-            options={["모드1", "모드2", "자동선택"]} style={{ width: 130 }} />
+            options={["자동선택", "모드1", "모드2", "모드3", "모드4", "모드5", "모드6"]} style={{ width: "100%" }} />
           <WinSelect value={p.columnUsage} onChange={(v) => u("columnUsage", v)}
-            options={["모두 사용", "이름/크기/날짜", "이름만"]} style={{ width: 130 }} />
+            options={["모드1까지", "모드2까지", "모드3까지", "모드4까지", "모드5까지", "모두 사용"]}
+            disabled={p.columnMode !== "자동선택"} style={{ width: "100%" }} />
         </div>
       </WinGroup>
       <WinGroup label="정렬">
         <div className="set-row">
           <WinSelect value={p.sortBy} onChange={(v) => u("sortBy", v)}
-            options={["이름", "확장자", "크기", "날짜"]} style={{ width: 130 }} />
+            options={[
+              "정렬안함", "이름", "확장자", "크기",
+              { value: "날짜", label: "날짜/시간" },
+              "색깔", "주석/종류", "속성", "실행파일",
+            ]} style={{ width: 130 }} />
           <WinCheck checked={p.sortAsc} onChange={(v) => u("sortAsc", v)}>오름차순</WinCheck>
         </div>
       </WinGroup>
@@ -86,21 +92,28 @@ export function TabFileWin({ w, setW }: TabEnv) {
           컬럼이 자동선택될 때 주석이 있는 폴더는 모드2 이하로 제한
         </WinCheck>
       </div>
-      <div className="set-row">
-        <WinCheck checked={w.autoColWidth} onChange={(v) => u("autoColWidth", v)}>
-          컬럼폭 자동 조정
-        </WinCheck>
-      </div>
-      <div className="set-row">
+      <div className="set-pair-grid">
         <WinCheck checked={w.folderSortMethod} onChange={(v) => u("folderSortMethod", v)}>
           폴더 정렬방법 지정
         </WinCheck>
         <WinSelect value={w.folderSortBy} onChange={(v) => u("folderSortBy", v)}
-          options={["이름", "확장자", "크기", "날짜"]} style={{ width: 150 }} />
+          options={[
+            "정렬안함", "이름", "확장자", "크기",
+            { value: "날짜", label: "날짜/시간" },
+            "색깔", "주석/종류", "속성", "실행파일",
+          ]} style={{ width: "100%" }} />
       </div>
-      <div className="set-row" style={{ marginTop: 4 }}>
+      <div className="set-pair-grid" style={{ marginTop: 4 }}>
+        <WinCheck checked={w.autoColWidth} onChange={(v) => u("autoColWidth", v)}>
+          컬럼폭 자동 조정
+        </WinCheck>
         <WinSelect value={w.defaultsPreset} onChange={(v) => u("defaultsPreset", v)}
-          options={["기본값"]} style={{ width: "100%" }} />
+          options={[
+            "기본값",
+            "이름별 길이 맞추기",
+            "가로창(현재 파일창) / 파일명 길이 맞추기(등록 파일창)",
+            "파일명 길이 맞추기(첫째 파일창) / 기본값(둘째 파일창)",
+          ]} style={{ width: "100%" }} />
       </div>
     </div>
   );
@@ -108,65 +121,19 @@ export function TabFileWin({ w, setW }: TabEnv) {
 
 /* ---------------- tab 02: 표시 ---------------- */
 
-const FONT_FAMILIES = ["맑은 고딕", "굴림", "돋움", "바탕", "system-ui", "sans-serif", "monospace"];
-
-export function FontSubDialog({
-  title,
-  initial,
-  onOk,
-  onCancel,
-}: {
-  title: string;
-  initial: { name: string; size: number };
-  onOk: (f: { name: string; size: number }) => void;
-  onCancel: () => void;
-}) {
-  const [name, setName] = React.useState(initial.name);
-  const [size, setSize] = React.useState(String(initial.size));
-  return (
-    <div className="set-subwindow" style={{ width: 360 }}>
-      <div className="set-titlebar">
-        <span>{title}</span>
-      </div>
-      <div className="set-subbody">
-        <div className="set-row">
-          <span style={{ width: 60 }}>글꼴</span>
-          <WinSelect value={name} onChange={setName} options={FONT_FAMILIES} style={{ width: 200 }} />
-        </div>
-        <div className="set-row">
-          <span style={{ width: 60 }}>크기</span>
-          <WinSelect value={size} onChange={setSize}
-            options={["9", "10", "11", "12", "13", "14"]} style={{ width: 100 }} />
-        </div>
-        <div className="set-note" style={{ marginTop: 8, border: "1px solid #7f7f7f", background: "#fff", padding: 8, fontFamily: name, fontSize: Number(size) || 12 }}>
-          가나다라 ABC abc 123
-        </div>
-        <div className="set-row" style={{ justifyContent: "flex-end", marginTop: 10 }}>
-          <WinButton onClick={() => onOk({ name, size: Number(size) || 12 })}>확인</WinButton>
-          <WinButton onClick={onCancel}>취소</WinButton>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function TabDisplay({ w, setW, openSub, closeSub }: TabEnv) {
+export function TabDisplay({ w, setW }: TabEnv) {
   const d = w.disp;
   const u = <K extends keyof WinmSettings["disp"]>(k: K, v: WinmSettings["disp"][K]) =>
     setW((p) => ({ ...p, disp: { ...p.disp, [k]: v } }));
-  const openFont = (kind: "filewin" | "mcd") => {
-    const cur = kind === "filewin" ? d.filewinFont : d.mcdFont;
-    openSub(
-      <FontSubDialog
-        title={kind === "filewin" ? "파일창 글꼴" : "MCD 글꼴"}
-        initial={cur}
-        onOk={(f) => {
-          u(kind === "filewin" ? "filewinFont" : "mcdFont", f);
-          closeSub();
-        }}
-        onCancel={closeSub}
-      />,
-    );
+  const openFont = async (kind: "filewin" | "mcd") => {
+    const key = kind === "filewin" ? "filewinFont" : "mcdFont";
+    const current = d[key];
+    try {
+      const selected = await selectFont(current);
+      if (selected) u(key, selected);
+    } catch (error) {
+      console.error("Failed to open native font selector:", error);
+    }
   };
   return (
     <div>
@@ -218,19 +185,37 @@ export function TabDisplay({ w, setW, openSub, closeSub }: TabEnv) {
             <div className="set-row">
               <span>폴더 대/소문자 표시</span>
               <WinSelect value={d.folderCase} onChange={(v) => u("folderCase", v)}
-                options={["변경 안함", "대문자", "소문자"]} style={{ width: 120 }} />
+                options={[
+                  "변경 안함",
+                  { value: "대문자", label: "모두 대문자" },
+                  { value: "소문자", label: "모두 소문자" },
+                  "첫글자만 대문자",
+                  "첫글자만 소문자",
+                  "단어 첫글자 대문자",
+                ]} style={{ width: 120 }} />
             </div>
             <div className="set-row">
               <span>파일 대/소문자 표시</span>
               <WinSelect value={d.fileCase} onChange={(v) => u("fileCase", v)}
-                options={["변경 안함", "대문자", "소문자"]} style={{ width: 120 }} />
+                options={[
+                  "변경 안함",
+                  { value: "대문자", label: "모두 대문자" },
+                  { value: "소문자", label: "모두 소문자" },
+                  "첫글자만 대문자",
+                  "첫글자만 소문자",
+                  "단어 첫글자 대문자",
+                ]} style={{ width: 120 }} />
             </div>
           </div>
           <div>
             <div className="set-row">
               <WinCheck checked={d.driveDisplay} onChange={(v) => u("driveDisplay", v)}>드라이브 표시</WinCheck>
               <WinSelect value={d.driveDisplayTarget} onChange={(v) => u("driveDisplayTarget", v)}
-                options={["모든 파일창", "첫째 파일창", "둘째 파일창"]} style={{ width: 130 }} />
+                options={[
+                  "모든 파일창",
+                  { value: "첫째 파일창", label: "첫째 파일창만" },
+                  { value: "둘째 파일창", label: "둘째 파일창만" },
+                ]} style={{ width: 130 }} />
             </div>
             <div className="set-row">
               <WinCheck checked={d.driveCapacity} onChange={(v) => u("driveCapacity", v)}>드라이브 용량 표시</WinCheck>
@@ -250,7 +235,11 @@ export function TabDisplay({ w, setW, openSub, closeSub }: TabEnv) {
             <div className="set-row">
               <span>파일목록 크기 표시</span>
               <WinSelect value={d.sizeUnit} onChange={(v) => u("sizeUnit", v)}
-                options={["바이트단위", "자동단위"]} style={{ width: 130 }} />
+                options={[
+                  "바이트단위",
+                  "KB단위",
+                  { value: "자동단위", label: "바이트/MB단위" },
+                ]} style={{ width: 130 }} />
             </div>
             <WinCheck checked={d.statusKbMb} onChange={(v) => u("statusKbMb", v)}>상태줄 KB/MB</WinCheck>
             <WinCheck checked={d.extAttached} onChange={(v) => u("extAttached", v)}>확장자 붙여서 표시</WinCheck>

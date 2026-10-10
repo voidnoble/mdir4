@@ -21,7 +21,11 @@ fn crc32_table() -> [u32; 256] {
     for i in 0..256 {
         let mut c = i as u32;
         for _ in 0..8 {
-            c = if c & 1 == 1 { 0xEDB88320 ^ (c >> 1) } else { c >> 1 };
+            c = if c & 1 == 1 {
+                0xEDB88320 ^ (c >> 1)
+            } else {
+                c >> 1
+            };
         }
         t[i] = c;
     }
@@ -140,7 +144,9 @@ pub fn split_file(
             let mut wrote_any = false;
             while left > 0 {
                 let want = (left.min(CHUNK as u64)) as usize;
-                let n = input.read(&mut buf[..want]).map_err(|e| FsError::from_io(e, src))?;
+                let n = input
+                    .read(&mut buf[..want])
+                    .map_err(|e| FsError::from_io(e, src))?;
                 if n == 0 {
                     break;
                 }
@@ -232,9 +238,16 @@ pub fn combine_files(
         .sum();
 
     // expected CRC from sidecar: <stem>.crc next to parts
-    let name = first_part.file_name().unwrap().to_string_lossy().into_owned();
+    let name = first_part
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
     let stem = &name[..name.rfind('.').unwrap()];
-    let crc_path = first_part.parent().unwrap_or_else(|| Path::new(".")).join(format!("{stem}.crc"));
+    let crc_path = first_part
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .join(format!("{stem}.crc"));
     let expected_crc: Option<u32> = fs::read_to_string(&crc_path)
         .ok()
         .and_then(|s| u32::from_str_radix(s.trim(), 16).ok());
@@ -324,12 +337,24 @@ pub async fn fs_split(
         let progress = move |p: ProgressPayload| {
             let _ = app2.emit("mdir4://fs-progress", p);
         };
-        split_file(Path::new(&path), Path::new(&dest_dir), chunk_size, &oid, &cancel, &progress)
+        split_file(
+            Path::new(&path),
+            Path::new(&dest_dir),
+            chunk_size,
+            &oid,
+            &cancel,
+            &progress,
+        )
     })
     .await
     .map_err(|_| FsError::internal("split task panicked"))?;
     state.unregister(&op_id);
-    result.map(|parts| parts.iter().map(|p| p.to_string_lossy().into_owned()).collect())
+    result.map(|parts| {
+        parts
+            .iter()
+            .map(|p| p.to_string_lossy().into_owned())
+            .collect()
+    })
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -347,7 +372,13 @@ pub async fn fs_combine(
         let progress = move |p: ProgressPayload| {
             let _ = app2.emit("mdir4://fs-progress", p);
         };
-        combine_files(Path::new(&first_part), Path::new(&dest_path), &oid, &cancel, &progress)
+        combine_files(
+            Path::new(&first_part),
+            Path::new(&dest_path),
+            &oid,
+            &cancel,
+            &progress,
+        )
     })
     .await
     .map_err(|_| FsError::internal("combine task panicked"))?;

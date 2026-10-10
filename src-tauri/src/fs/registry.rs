@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 /// Cancellation tokens for in-flight file operations, keyed by op id.
 #[derive(Default)]
@@ -11,7 +11,10 @@ pub struct OpRegistry {
 impl OpRegistry {
     pub fn register(&self, op_id: &str) -> Arc<AtomicBool> {
         let flag = Arc::new(AtomicBool::new(false));
-        self.inner.lock().unwrap().insert(op_id.to_string(), flag.clone());
+        self.inner
+            .lock()
+            .unwrap()
+            .insert(op_id.to_string(), flag.clone());
         flag
     }
 

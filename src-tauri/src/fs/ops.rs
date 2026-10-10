@@ -86,8 +86,10 @@ fn resolve_conflict(dst: &Path, src: &Path, policy: OverwritePolicy) -> Option<P
     }
     match policy {
         OverwritePolicy::Overwrite => {
-            let is_real_dir =
-                dst.is_dir() && !fs::symlink_metadata(dst).map(|m| m.file_type().is_symlink()).unwrap_or(true);
+            let is_real_dir = dst.is_dir()
+                && !fs::symlink_metadata(dst)
+                    .map(|m| m.file_type().is_symlink())
+                    .unwrap_or(true);
             if is_real_dir {
                 let _ = fs::remove_dir_all(dst);
             } else {
@@ -149,11 +151,15 @@ fn copy_file_chunked(
     let mut buf = vec![0u8; CHUNK];
     loop {
         check_cancel(cancel)?;
-        let n = reader.read(&mut buf).map_err(|e| FsError::from_io(e, src))?;
+        let n = reader
+            .read(&mut buf)
+            .map_err(|e| FsError::from_io(e, src))?;
         if n == 0 {
             break;
         }
-        writer.write_all(&buf[..n]).map_err(|e| FsError::from_io(e, dst))?;
+        writer
+            .write_all(&buf[..n])
+            .map_err(|e| FsError::from_io(e, dst))?;
         ctx.bytes_done += n as u64;
         ctx.emit(&src.to_string_lossy(), false);
     }
@@ -216,7 +222,9 @@ fn copy_one(
     let file_name = match src.file_name() {
         Some(n) => n,
         None => {
-            summary.errors.push(format!("invalid source name: {}", src.display()));
+            summary
+                .errors
+                .push(format!("invalid source name: {}", src.display()));
             return;
         }
     };
@@ -233,7 +241,9 @@ fn copy_one(
         Ok(()) => ctx.emit(&src.to_string_lossy(), false),
         Err(e) if e.kind == "cancelled" => summary.cancelled = true,
         Err(e) if e.kind == "skipped" => summary.skipped.push(e.path.unwrap_or_default()),
-        Err(e) => summary.errors.push(format!("{}: {}", src.display(), e.message)),
+        Err(e) => summary
+            .errors
+            .push(format!("{}: {}", src.display(), e.message)),
     }
 }
 
@@ -332,7 +342,9 @@ pub fn move_items(
         let file_name = match src.file_name() {
             Some(n) => n,
             None => {
-                summary.errors.push(format!("invalid source name: {}", src.display()));
+                summary
+                    .errors
+                    .push(format!("invalid source name: {}", src.display()));
                 continue;
             }
         };
@@ -363,13 +375,17 @@ pub fn move_items(
         match copy_recursive(src, &dst, cancel, &mut ctx) {
             Ok(()) => match delete_permanent(src, cancel, &mut silent) {
                 Ok(()) => ctx.emit(&src.to_string_lossy(), false),
-                Err(e) => summary
-                    .errors
-                    .push(format!("{} (delete after copy): {}", src.display(), e.message)),
+                Err(e) => summary.errors.push(format!(
+                    "{} (delete after copy): {}",
+                    src.display(),
+                    e.message
+                )),
             },
             Err(e) if e.kind == "cancelled" => summary.cancelled = true,
             Err(e) if e.kind == "skipped" => summary.skipped.push(e.path.unwrap_or_default()),
-            Err(e) => summary.errors.push(format!("{}: {}", src.display(), e.message)),
+            Err(e) => summary
+                .errors
+                .push(format!("{}: {}", src.display(), e.message)),
         }
     }
     summary.files_done = ctx.files_done;
@@ -379,17 +395,29 @@ pub fn move_items(
 }
 
 /// Permanently delete one path (file, symlink, or dir tree).
-fn delete_permanent(path: &Path, cancel: &AtomicBool, ctx: &mut ProgressCtx) -> Result<(), FsError> {
+fn delete_permanent(
+    path: &Path,
+    cancel: &AtomicBool,
+    ctx: &mut ProgressCtx,
+) -> Result<(), FsError> {
     let meta = fs::symlink_metadata(path).map_err(|e| FsError::from_io(e, path))?;
     if meta.file_type().is_dir() && !meta.file_type().is_symlink() {
-        for entry in WalkDir::new(path).contents_first(true).into_iter().flatten() {
+        for entry in WalkDir::new(path)
+            .contents_first(true)
+            .into_iter()
+            .flatten()
+        {
             check_cancel(cancel)?;
             let p = entry.path();
             // contents_first removes children before parents; the root dir
             // itself is removed last by remove_dir. Only files count toward
             // progress, matching compute_totals().
             let is_dir = entry.file_type().is_dir();
-            let r = if is_dir { fs::remove_dir(p) } else { fs::remove_file(p) };
+            let r = if is_dir {
+                fs::remove_dir(p)
+            } else {
+                fs::remove_file(p)
+            };
             if let Err(e) = r {
                 return Err(FsError::from_io(e, p));
             }
@@ -416,7 +444,11 @@ pub fn delete_items(
     cancel: &AtomicBool,
     progress: &ProgressFn,
 ) -> Result<OpSummary, FsError> {
-    let files_total = if permanent { compute_totals(paths).0 } else { paths.len() };
+    let files_total = if permanent {
+        compute_totals(paths).0
+    } else {
+        paths.len()
+    };
     let mut ctx = ProgressCtx {
         op_id: op_id.to_string(),
         op: "delete",
@@ -495,7 +527,9 @@ pub fn rename_path(path: &Path, new_name: &str) -> Result<(), FsError> {
     if new_name.is_empty() || new_name.contains('/') || new_name.contains('\\') {
         return Err(FsError::internal("invalid new name"));
     }
-    let parent = path.parent().ok_or_else(|| FsError::internal("no parent folder"))?;
+    let parent = path
+        .parent()
+        .ok_or_else(|| FsError::internal("no parent folder"))?;
     let dst = parent.join(new_name);
     fs::rename(path, &dst).map_err(|e| FsError::from_io(e, &dst))
 }

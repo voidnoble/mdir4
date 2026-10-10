@@ -47,7 +47,14 @@ pub async fn fs_copy(
             let _ = app2.emit("mdir4://fs-progress", p);
         };
         let sources: Vec<PathBuf> = sources.iter().map(PathBuf::from).collect();
-        ops::copy_items(&sources, Path::new(&dest_dir), policy, &oid, &cancel, &progress)
+        ops::copy_items(
+            &sources,
+            Path::new(&dest_dir),
+            policy,
+            &oid,
+            &cancel,
+            &progress,
+        )
     })
     .await
     .map_err(|_| FsError::internal("copy task panicked"))?;
@@ -75,7 +82,14 @@ pub async fn fs_move(
             let _ = app2.emit("mdir4://fs-progress", p);
         };
         let sources: Vec<PathBuf> = sources.iter().map(PathBuf::from).collect();
-        ops::move_items(&sources, Path::new(&dest_dir), policy, &oid, &cancel, &progress)
+        ops::move_items(
+            &sources,
+            Path::new(&dest_dir),
+            policy,
+            &oid,
+            &cancel,
+            &progress,
+        )
     })
     .await
     .map_err(|_| FsError::internal("move task panicked"))?;

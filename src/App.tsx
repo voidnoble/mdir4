@@ -36,6 +36,7 @@ import ZipViewDialog from "./dialogs/ZipViewDialog";
 import FileListDialog from "./dialogs/FileListDialog";
 import FilterDialog from "./dialogs/FilterDialog";
 import HelpDialog from "./dialogs/HelpDialog";
+import AboutDialog from "./dialogs/AboutDialog";
 import OpenWithDialog, { extOf } from "./dialogs/OpenWithDialog";
 import PropsDialog from "./dialogs/PropsDialog";
 import SelectDialog from "./dialogs/SelectDialog";
@@ -88,6 +89,7 @@ type DialogState =
   | { kind: "filter" }
   | { kind: "select"; select: boolean }
   | { kind: "help" }
+  | { kind: "about" }
   | { kind: "fileList" }
   | { kind: "openWith"; path: string }
   | { kind: "progress"; opId: string; title: string }
@@ -175,7 +177,7 @@ function App() {
       const rs = document.documentElement.style;
       const setFont = (key: string, name: string, size: number) => {
         if (name) {
-          rs.setProperty(`--${key}-font`, `"${name}", "Malgun Gothic", sans-serif`);
+          rs.setProperty(`--${key}-font`, `${JSON.stringify(name)}, "Malgun Gothic", sans-serif`);
           rs.setProperty(`--${key}-size`, `${size}px`);
         }
       };
@@ -1196,6 +1198,7 @@ function App() {
     },
     settings: () => openSettings(),
     help: () => setDialog({ kind: "help" }),
+    about: () => setDialog({ kind: "about" }),
   };
 
   const uiLang = getLang();
@@ -1483,6 +1486,7 @@ function App() {
         />
       )}
       {d?.kind === "help" && <HelpDialog onClose={() => setDialog(null)} />}
+      {d?.kind === "about" && <AboutDialog onClose={() => setDialog(null)} />}
       {d?.kind === "fileList" && (
         <FileListDialog
           dir={(active === 0 ? left : right).state.path}

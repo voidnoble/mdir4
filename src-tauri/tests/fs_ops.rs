@@ -84,7 +84,10 @@ fn copy_tree_reports_progress() {
     assert_eq!(summary.files_done, 2);
     assert!(!summary.cancelled);
     assert!(summary.errors.is_empty());
-    assert_eq!(fs::read_to_string(dst.join("a.txt")).unwrap(), "contents of a.txt");
+    assert_eq!(
+        fs::read_to_string(dst.join("a.txt")).unwrap(),
+        "contents of a.txt"
+    );
     assert_eq!(
         fs::read_to_string(dst.join("sub").join("c.txt")).unwrap(),
         "contents of sub/c.txt"
@@ -181,9 +184,20 @@ fn delete_to_trash() {
     fs::write(&target, "bye").unwrap();
 
     let cancel = no_cancel();
-    let summary = ops::delete_items(&[target.clone()], false, "op-6", &cancel, &|_: ProgressPayload| {}).unwrap();
+    let summary = ops::delete_items(
+        &[target.clone()],
+        false,
+        "op-6",
+        &cancel,
+        &|_: ProgressPayload| {},
+    )
+    .unwrap();
 
-    assert!(summary.errors.is_empty(), "trash errors: {:?}", summary.errors);
+    assert!(
+        summary.errors.is_empty(),
+        "trash errors: {:?}",
+        summary.errors
+    );
     assert!(!target.exists());
 }
 
@@ -226,7 +240,10 @@ fn make_dir_and_rename() {
     fs::write(&file, "data").unwrap();
     ops::rename_path(&file, "new.txt").unwrap();
     assert!(!file.exists());
-    assert_eq!(fs::read_to_string(tmp.path().join("new.txt")).unwrap(), "data");
+    assert_eq!(
+        fs::read_to_string(tmp.path().join("new.txt")).unwrap(),
+        "data"
+    );
 
     assert!(ops::rename_path(tmp.path().join("new.txt").as_path(), "bad/name").is_err());
 }
@@ -290,7 +307,8 @@ fn zip_roundtrip() {
     let zip_path = tmp.path().join("out.zip");
     let cancel = AtomicBool::new(false);
     let noop = |_: mdir4::fs::types::ProgressPayload| {};
-    let summary = archive::zip_create(&[src.clone()], &zip_path, "test-zip", &cancel, &noop).unwrap();
+    let summary =
+        archive::zip_create(&[src.clone()], &zip_path, "test-zip", &cancel, &noop).unwrap();
     assert_eq!(summary.files_done, 2);
     assert!(zip_path.exists());
 
