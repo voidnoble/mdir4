@@ -84,7 +84,8 @@ mod windows {
         let dpi = if hdc.is_null() {
             96
         } else {
-            unsafe { GetDeviceCaps(hdc, LOGPIXELSY) }
+            // LOGPIXELSY is u32 in windows-sys 0.61 but GetDeviceCaps takes i32.
+            unsafe { GetDeviceCaps(hdc, LOGPIXELSY as i32) }
         }
         .max(1);
         log_font.lfHeight = -((initial.size * dpi as f64 / 96.0).round() as i32);
